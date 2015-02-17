@@ -1,0 +1,149 @@
+#!/usr/bin/perl -w
+################################################################################
+# CodeEasy Customer Evaluation Script
+#          This script was developed by NetApp to help demonstrate NetApp 
+#          technologies.  This script is not officially supported as a 
+#          standard NetApp product.
+#         
+# Purpose: 
+#          This program performs runs a command line as a new user, such
+#          as a devops or build user who has permissions to do things
+#          like create snapshot, create flexclones, etc.
+#
+#          [SEE BELOW FOR 'setuid' manpage]      
+# 
+#
+# Usage:   %> sur_dispatch <command line to execute>
+#
+# Author:  Michael Johnson (michael.johnson@netapp.com)
+#           
+# Copyright 2015 NetApp
+#
+################################################################################
+
+use warnings;
+use strict;
+
+use FindBin;
+use lib "$FindBin::Bin/../codeasy/lib";
+use lib "$FindBin::Bin/../lib";
+
+use CeInit;
+use CeUtil;
+use CeP4;
+use CeAdmin;
+use CeZapiFiler;
+use CeSur;
+
+use Capture::Tiny qw(capture);
+use Cwd;
+use Fcntl;
+use File::Copy;
+use File::Path;
+use Data::Dumper;
+
+do_sur_dispatch();
+
+sub do_sur_dispatch {
+    die("USAGE: $0 <parent_cmd> <sur_cmd> <subparams> <log>\n") if @ARGV < 4;
+
+    my ($parent_cmd, $sur_cmd, $log_file) = @ARGV[0, 1, -1];
+
+    CeInit::init("$parent_cmd (sur)", "SUR", $log_file, @ARGV);
+    CeUtil::log_only(sprintf "%-7s: %s\n", "CALL", "sur_dispatch");
+    CeUtil::log_only(sprintf "%-7s: %-9s=> %s\n", "", "param", $_) foreach @ARGV;
+
+    my $ret = 1;
+    if ($sur_cmd eq "sur_vol_exists") {
+        $ret = CeZapiFiler::vol_exists(@ARGV[2..4]);
+    } elsif ($sur_cmd eq "sur_mount_volume") {
+        $ret = CeZapiFiler::mount_volume(@ARGV[2..5]);
+    } elsif ($sur_cmd eq "sur_modify_volume_attrs") {
+        $ret = CeZapiFiler::modify_volume_attrs(@ARGV[2..6]);
+    } elsif ($sur_cmd eq "sur_clone_volume") {
+        $ret = CeZapiFiler::clone_volume(@ARGV[2..6]);
+    } elsif ($sur_cmd eq "sur_create_snapshot") {
+        $ret = CeZapiFiler::create_snapshot(@ARGV[2..5]);
+    } elsif ($sur_cmd eq "sur_set_user_clone_attrs") {
+        $ret = CeZapiFiler::set_user_clone_attrs(@ARGV[2..5]);
+    } elsif ($sur_cmd eq "sur_make_path") {
+        $ret = CeUtil::make_path($ARGV[2]);
+    } elsif ($sur_cmd eq "sur_delete_volume") {
+        $ret = CeZapiFiler::delete_volume(@ARGV[2..4]);
+    } elsif ($sur_cmd eq "sur_do_chown") {
+        my ($chown_dir, $from_user, $to_user) = @ARGV[2..4];
+        my ($uid) = (getpwnam($to_user))[2];
+
+        my $file_list = "$chown_dir/$CeInit::CE_FILELIST";
+        unless (-e $file_list) {
+            my $temp_file_list = "$chown_dir/.filelist.temp";
+
+            # Files should not be there, but just in case
+            unlink($file_list);
+            unlink($temp_file_list);
+
+            # Create temp file
+            open(my $fh, ">", $temp_file_list) or warn "$!\n";
+            close( $fh);
+
+            $ret = CeUtil::generate_file_list($chown_dir, $temp_file_list);
+            if ($ret) {
+                CeUtil::log_and_print("FAIL: Unable to proceed with sur_do_chown\n");
+            }
+
+            $ret = copy($temp_file_list, $file_list);
+            unless ($ret) {
+                CeUtil::log_and_print("FAIL: Unable to copy over $temp_file_list to $file_list\n");
+                CeUtil::log_and_print("FAIL: Unable to proceed with sur_do_chown\n");
+            }
+            $ret = do_filelist_chown($chown_dir, $to_user, $uid, $file_list);
+        } else {
+            CeUtil::log_only("$file_list exists, chown based on its content ...\n");
+            $ret = do_filelist_chown($chown_dir, $to_user, $uid, $file_list);
+        }
+    }
+    return $ret;
+}
+
+sub do_filelist_chown {
+    my ($chown_dir, $to_user, $uid, $file_list) = @_;
+
+    CeUtil::log_only(sprintf "%-7s: %s\n", "CALL", "do_filelist_chown");
+    CeUtil::log_only(sprintf "%-7s: %-16s=> %s\n", "", "chown_dir", $chown_dir);
+    CeUtil::log_only(sprintf "%-7s: %-16s=> %s\n", "", "to_user", $to_user);
+    CeUtil::log_only(sprintf "%-7s: %-16s=> %s\n", "", "uid", $uid);
+    CeUtil::log_only(sprintf "%-7s: %-16s=> %s\n", "", "file_list", $file_list);
+
+    CeUtil::log_only(sprintf "%9s%s\n", "", "Changing ownership of $chown_dir to $to_user");
+
+    my $pid = fork;
+    CeUtil::log_only(sprintf "%9s%s\n", "", "PID: $pid");
+    unless (defined $pid) {
+        exit (1);
+    }
+    if ($pid == 0) {
+        chdir ($chown_dir);
+
+        my $chown_cmd = qq($CeInit::CE_CMD_CAT "$file_list" | $CeInit::CE_CMD_TR '\\n' '\\0' | $CeInit::CE_CMD_XARGS -0 -P 42 $CeInit::CE_CMD_CHOWN $uid);
+        CeUtil::log_only(sprintf "%9s%s\n", "", qq(Executing "$chown_cmd"));
+
+        my ($stdout, $stderr) = capture {system($chown_cmd)};
+        CeUtil::log_only("chown command output:\n");
+        CeUtil::log_only($stdout);
+
+        CeUtil::log_and_print("chown returned with $stderr\n");
+        if ($stderr) {
+            CeUtil::log_and_print("chown failed\n");
+            CeUtil::log_only("Returning 1\n");
+            return 1;
+        }
+
+        CeUtil::log_and_print("chown passed\n");
+        CeUtil::log_only("Returning 0\n");
+        return 0;
+    }
+    waitpid(-1, 0);
+
+    CeUtil::log_only(sprintf "%9s%s\n", "", "Finished waiting for the child process. Returning from do_filelist_chown()...");
+    return 0;
+}
