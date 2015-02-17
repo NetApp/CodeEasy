@@ -40,12 +40,17 @@ my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
 
 our $progname="build_release.pl";    # name of this program
 
+our $verbose;
+
 # get location one level above this script
-our $proj_dir    = "$FindBin:Bin/..";
-our $release_dir = "$FindBin:Bin/../release";
+our $proj_dir    = "$FindBin::Bin/..";
+our $release_dir = "$FindBin::Bin/../release";
 
 # name of ther release comes from the bin/release_version file
 our $version_name;
+
+# list of things to package
+our @packaging_list = ('src', 'docs');
 
 
 ############################################################
@@ -57,6 +62,9 @@ our $version_name;
 
 # release version info from file
 &read_version_info();
+
+# package the release
+&package_release();
 
 
 # exit program successfully
@@ -122,7 +130,7 @@ $progname: Usage Information
 ########################################
 # get version value from file
 ########################################
-sub &read_version_info {
+sub read_version_info {
 
     # get version info out of the bin/release_version file
     $version_name = `/bin/cat $proj_dir/bin/release_version`;
@@ -130,15 +138,68 @@ sub &read_version_info {
     chomp $version_name;
     $version_name =~ s/\s//g;
 
-    print "INFO: Building Version - <$version_name>\n";
-
+    print "INFO: Building Version => $version_name\n";
 
 } # end of sub &read_version_info();
 
 ########################################
 # package release
 ########################################
-sub &package_release {
+sub package_release {
+
+    my $cmd;
+
+    # new release directory
+    $release_dir = "$release_dir/$version_name";
+
+    # make release directory
+    $cmd = "/bin/mkdir -p $release_dir";
+    if (system($cmd) == 0) {
+	print "INFO ($progname): Successfully created release directory\n" .
+	      "     $release_dir\n";
+    } else {
+	print "ERROR ($progname): failed to create release directory\n" .
+	      "     $release_dir\n" .
+	      "     Exiting...\n";
+	exit 1;
+    }
+
+    # copy build directory into release area
+    foreach my $item (@packaging_list) {
+
+	# copy each item to the release area
+	$cmd = "/bin/cp -r $proj_dir/$item $release_dir/.";
+	print "DEBUG: $cmd\n";
+	if (system($cmd) == 0) {
+	    print "INFO ($progname): Successfully copied $item\n" .
+		  "     $release_dir\n";
+	} else {
+	    print "ERROR ($progname): failed to copy $item to the $proj_dir\n" .
+		  "     $release_dir\n" .
+		  "     Exiting...\n";
+	    exit 1;
+	}
+
+    }
+
+    # clean-out all CVS directories from the release
+    $cmd = qq[/bin/find $release_dir -type d -name CVS -exec /bin/rm -fr {} \\; ];
+    if (system("$cmd") == 0) {
+	print "INFO ($progname): Successfully removed CVS directories\n";
+    } else {
+	print "ERROR ($progname): failed to remove CVS directories\n" .
+	      "     $cmd\n";
+    }
+
+    # generate tarball
+    $cmd = "/bin/tar -zcvf ${release_dir}.tgz $release_dir";
+    print "DEBUG: $cmd\n";
+    if (system($cmd) == 0) {
+	print "INFO ($progname): Release tarball ${release_dir}.tgz\n";
+    } else {
+	print "ERROR ($progname): failed to create release tarball\n" .
+	      "     $cmd\n";
+    }
 
 
 } # end of sub &package_release();
