@@ -1,0 +1,26 @@
+--------------------------------------------------------------------------------
+- CodeEasy Evaluation Kit - README
+--------------------------------------------------------------------------------
+
+Installation Instructions
+----------------------------------------
+1. Untar the eval kit tarball
+   %> tar zxvf CodeEasy_x.x.x.tgz
+
+2. Download the NetApp Manageability SDK 5.2.2 from the support.netapp.com site
+   netapp-manageability-sdk-5.2.2
+
+3. Build the 'sur' code on the UNIX platform you will use
+   %> cd <CodeEasy tarball dir>/src
+   %> make
+   This will build a file called 'sur'
+
+4. 
+
+
+
+Setup and Customization Help
+----------------------------------------
+
+
+
