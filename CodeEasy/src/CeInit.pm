@@ -91,13 +91,14 @@ our @CE_ADMIN_USER  = ("vsadmin","devops123");
     our $CE_SSPOLICY_DEVOPS_USER   = "devops_user";
     our $CE_POLICY_EXPORT          = "aws_bb2";
     our $CE_ATIME_UPDATE           = "false";
+    our $CE_UNIX_PERMISSIONS       = "775";
 
 
 ########################################
 # Perforce setup information
 ########################################
     our $CE_P4PORT = "10.14.47.6:1666";
-    our $CE_CMD_P4 = "$CE_ROOT/devops_tools/p4 -p $CE_P4PORT";
+    our $CE_CMD_P4 = "/x/eng/devops_tools/p4 -p $CE_P4PORT";
 
 
 
@@ -110,7 +111,7 @@ our @EXPORT = qw($CE_DEVOPS_USER $CE_ROOTUSER $CE_USER $CE_GROUP @CE_ADMIN_USER$
                  $CE_DAEMON_VOL_SIZE 
                  $CE_MOUNT_ROOT_DIR $CE_MOUNT_DAEMON_ROOT $CE_MOUNT_USER_ROOT
                  $CE_CLONE_SIZE $CE_SSRESERVE_PERCENT $CE_VOLUME_SPACE_GUARANTEE $CE_SSPOLICY_DEVOPS_USER 
-		 $CE_POLICY_EXPORT $CE_ATIME_UPDATE
+		 $CE_POLICY_EXPORT $CE_ATIME_UPDATE $CE_UNIX_PERMISSIONS
                  $CE_P4PORT $CE_CMD_P4 );
 
 
