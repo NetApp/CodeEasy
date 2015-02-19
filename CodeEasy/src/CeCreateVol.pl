@@ -22,9 +22,8 @@ use Cwd;
 use Getopt::Long;  # Perl library for parsing command line options
 use strict;        # require strict programming rules
 
-# Use CSV package which is located in the same location as the executable.
 # The FindBin helps indentify the path this executable and thus its path
-use FindBin ();
+use FindBin();
 
 # load NetApp manageability SDK APIs
 use lib "$FindBin::Bin/../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
@@ -33,7 +32,8 @@ use NaElement;
 
 # load CodeEasy packages
 use lib "$FindBin::Bin/.";
-use CeInit;
+use CeInit;        # contains CodeEasy script setup values
+use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 
 
 ############################################################
@@ -41,6 +41,8 @@ use CeInit;
 ############################################################
 # determine date
 my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
+
+our $progname="CeCreateVol.pl";    # name of this program
 
 # command line argument values
 our $volume  = "ce_test_vol";      # cmdline arg: volume to create (default name)
@@ -50,21 +52,6 @@ our $snapshot_create;              # cmdline arg: snapshot name to create
 our $snapshot_delete;              # cmdline arg: snapshot name to delete
 our $verbose;                      # cmdline arg: verbosity level
 
-our $progname="CeCreateVol.pl";    # name of this program
-
-
-# initialize values from common control file (CeInit.pm).
-# most of the values here are set once per project
-our $filer           = $CeInit::CE_CLUSTER_PORT          unless $filer;
-our $vserver         = $CeInit::CE_DEFAULT_VSERVER       unless $vserver;
-our $aggr            = $CeInit::CE_AGGR                  unless $aggr;
-#our $uid             = $CeInit::CE_DEVOPS_USER           unless $uid;
-our $uid             = $CeInit::CE_ROOTUSER              unless $uid;
-our $gid             = $CeInit::CE_GROUP                 unless $gid;
-our $volsize         = $CeInit::CE_DAEMON_VOL_SIZE       unless $volsize;
-our $unixperm        = "775"                             unless $unixperm;
-our $export_policy   = $CeInit::CE_POLICY_EXPORT         unless $export_policy;
-our $snapshot_policy = $CeInit::CE_SSPOLICY_DEVOPS_USER  unless $snapshot_policy;
 
 ############################################################
 # Start Program
@@ -86,7 +73,6 @@ our $snapshot_policy = $CeInit::CE_SSPOLICY_DEVOPS_USER  unless $snapshot_policy
 # create flexclone
 my $parent_snapshot = "mj_snap3";
 my $clone_name = "${parent_snapshot}_clone";
-my $junction_path = "$CeInit::CE_MOUNT_ROOT_DIR/$clone_name";
 &clone_create($volume, $parent_snapshot, $clone_name, $junction_path );
 
 
@@ -167,45 +153,6 @@ $progname: Usage Information
 } # end of sub &show_help()
 
 
-###################################################################################
-# Initialize filer - return structure
-###################################################################################
-sub init_filer {
-
-    # temp vars for getting filer info and status
-    my $out;
-    my $errno;
-
-    #--------------------------------------- 
-    # initialize access to NetApp filer
-    #--------------------------------------- 
-    my $naserver = NaServer->new($filer, 1, 21);
-
-    #$naserver->set_admin_user("vsadmin", "devops123");
-    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
-    $naserver->set_transport_type("HTTP");
-    if ($vserver) {
-        printf "INFO ($progname): %-7s: %-16s=> %s\n", "", "vserver", $vserver;
-        $naserver->set_vserver($vserver);
-    }
-
-    $out =  $naserver->invoke("system-get-version");
-
-    # check error status and exit if basic communication with the file can't be estabilished.
-    $errno = $out->results_errno();
-    if ($errno) {
-        print "ERROR ($progname): FAIL: Unable to obtain $filer version\n";
-        print "ERROR ($progname): system-get-version returned with $errno and reason: " . 
-	                          '"' .  $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
-        exit 1;
-    }
-    print "INFO ($progname): Filer <$filer> is running cDOT version\n" .  
-                $out->child_get_string("version") . " \n";
-
-    return $naserver;
-
-} # end of init_filer()
 
 
 ###################################################################################
@@ -231,20 +178,29 @@ sub create_volume {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = &init_filer();
+    my $naserver = &CeCommon::init_filer($progname);
 
+    #--------------------------------------- 
+    # determine junction path  (mount point)
+    #--------------------------------------- 
+    # put the new volume at the end of the pre-mounted root directory
+    # this will make it so the new volume will automatically be mounted
 
-    my $junction_path = "$CeInit::CE_MOUNT_ROOT_DIR/ws2";
+    # NOTE: volumes will be created by the DEAMON, so they will be mounted to the
+    # CE_DAEMON_ROOT vs the CE_USER_ROOT
+
+    my $junction_path = "$CeInit::CE_DAEMON_ROOT/$volume";
+
     #--------------------------------------- 
     # create volume
     #--------------------------------------- 
     $out = $naserver->invoke("volume-create", "volume",               $volume, 
-                                              "containing-aggr-name", $aggr, 
-                                              "size",                 $volsize, 
-                                              "unix-permissions",     $unixperm, 
-                                              "export-policy",        $export_policy, 
-                                              "snapshot-policy",      $snapshot_policy, 
 					      "junction-path",        $junction_path,
+                                              "containing-aggr-name", $CeInit::CE_AGGR, 
+                                              "size",                 $CeInit::CE_DAEMON_VOL_SIZE, 
+                                              "unix-permissions",     $CeInit::CE_UNIX_PERMISSIONS, 
+                                              "export-policy",        $CeInit::CE_POLICY_EXPORT, 
+                                              "snapshot-policy",      $CeInit::CE_SSPOLICY_DEVOPS_USER, 
                                               "space-reserve",        "none");
 
     # check status of the volume creation
@@ -273,7 +229,7 @@ sub remove_volume {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = &init_filer();
+    my $naserver = &CeCommon::init_filer($progname);
 
     #--------------------------------------- 
     # first make sure the volume is unmounted
@@ -347,7 +303,7 @@ sub snapshot_create {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = &init_filer();
+    my $naserver = &CeCommon::init_filer($progname);
 
     #--------------------------------------- 
     # create snapshot
@@ -385,7 +341,7 @@ sub snapshot_delete {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = &init_filer();
+    my $naserver = &CeCommon::init_filer($progname);
 
     #--------------------------------------- 
     # delete snapshot
@@ -422,7 +378,7 @@ sub clone_create {
 
     # arguments passed into sub
     my ($volume, $parent_snapshot,
-        $clone_name, $junction_path ) = @_;
+        $clone_name ) = @_;
 
     # temp vars for getting filer info and status
     my $out;
@@ -431,7 +387,19 @@ sub clone_create {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = &init_filer();
+    my $naserver = &CeCommon::init_filer($progname);
+
+
+    #--------------------------------------- 
+    # determine junction path  (mount point)
+    #--------------------------------------- 
+    # put the new volume at the end of the pre-mounted root directory
+    # this will make it so the new volume will automatically be mounted
+
+    # NOTE: clones will be created by users, so they will be mounted to the
+    # CE_USER_ROOT vs the CE_DAEMON_ROOT
+    my $junction_path = "$CeInit::CE_USER_ROOT/$clone_name";
+
 
     #--------------------------------------- 
     # create flexclone
