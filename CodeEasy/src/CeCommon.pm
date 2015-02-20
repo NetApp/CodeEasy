@@ -21,9 +21,10 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
+# declair this file (.pm) as a Perl package
+package CeCommon;
+
 use Cwd;
-use Getopt::Long;  # Perl library for parsing command line options
 use strict;        # require strict programming rules
 
 # The FindBin helps indentify the path this executable and thus its path
@@ -40,14 +41,11 @@ use CeInit;
 
 
 
-
 ###################################################################################
-# Initialize filer - return structure
+# Initialize filer - return data structure
 ###################################################################################
 sub init_filer {
 
-    # take the calling program name as input
-    my ($progname) = @_;
 
     # temp vars for getting filer info and status
     my $out;
@@ -62,7 +60,7 @@ sub init_filer {
     $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
     $naserver->set_transport_type("HTTP");
     if ($CeInit::CE_DEFAULT_VSERVER) {
-        printf "INFO ($progname): %-7s: %-16s=> %s\n", "", "vserver", $CeInit::CE_DEFAULT_VSERVER;
+        printf "INFO  ($main::progname): %-16s=> %s\n", "vserver", $CeInit::CE_DEFAULT_VSERVER;
         $naserver->set_vserver($CeInit::CE_DEFAULT_VSERVER);
     }
 
@@ -71,13 +69,13 @@ sub init_filer {
     # check error status and exit if basic communication with the file can't be estabilished.
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): FAIL: Unable to obtain $CeInit::CE_CLUSTER_PORT version\n";
-        print "ERROR ($progname): system-get-version returned with $errno and reason: " . 
+        print "ERROR ($main::progname): FAIL: Unable to obtain $CeInit::CE_CLUSTER_PORT version\n";
+        print "ERROR ($main::progname): system-get-version returned with $errno and reason: " . 
 	                          '"' .  $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
+        print "ERROR ($main::progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Filer <$CeInit::CE_CLUSTER_PORT> is running cDOT version\n" .  
+    print "INFO ($main::progname): Filer <$CeInit::CE_CLUSTER_PORT> is running cDOT version\n" .  
                 $out->child_get_string("version") . " \n";
 
     return $naserver;

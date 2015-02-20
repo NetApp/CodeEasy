@@ -5,33 +5,7 @@
 ################################################################################
 
 
-#--------------------------------------- 
-# AWS Test Instructions
-#--------------------------------------- 
-#   You can use the AWS instance and filer that we set up for our project.  
-#           |-> https://console.aws.amazon.com/console/home?region=us-west-1
-#
-#   You can log onto AWS with the following login info:
-#           Email address:    alireza.moshtaghi@netapp.com
-#           Password:         April.15
-#
-#   You can see instances here 
-#           |-> https://console.aws.amazon.com/ec2/v2/home?region=us-west-1#Instances:sort=instanceId
-#   
-#   The instance we used was DevOps-Build and you can connect to it using SSH:
-#           ssh -i /u/vsrividy/vidya.pem ubuntu@54.183.32.123
-
-#   Once you log onto this instance, you can ssh to the filer:
-#
-#   UNIX mount a new volume and change permissions on the mount
-#           sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
-#           sudo chown <usr:grp> <unix mount point>
-#
-#   UNIX unmount a volume
-#           sudo umount <unix mount point>
-#           
-#--------------------------------------- 
-
+# declair this file (.pm) as a Perl package
 package CeInit;
 
 
@@ -39,10 +13,10 @@ package CeInit;
 # Users Info - for login permisions etc. 
 ########################################
 # MJ TODO: What are these used for - need description and tie back to code
-our $CE_DEVOPS_USER = "devops";      # user who has all the filer permissions.  can do any write 
+our $CE_DEVOPS_USER = "devops";      # user who has filer permissions.  can do any write 
                                      # operations including add/remove volume/snaps/etc.
 				     # this is the user the Daemon runs as
-our $CE_ROOTUSER    = "root";        # UNIX root - used only for sur
+
 our $CE_USER        = "unknown";     # Average user - set to unknown for now until determined by script
 our $CE_GROUP       = "ubuntu";      # UNIX group name: project or dept group to use
 
@@ -94,18 +68,12 @@ our @CE_ADMIN_USER  = ("vsadmin","devops123");
     our $CE_UNIX_PERMISSIONS       = "775";
 
 
-########################################
-# Perforce setup information
-########################################
-    our $CE_P4PORT = "10.14.47.6:1666";
-    our $CE_CMD_P4 = "/x/eng/devops_tools/p4 -p $CE_P4PORT";
-
 
 
 ########################################
 # Export variable for use by flow
 ########################################
-our @EXPORT = qw($CE_DEVOPS_USER $CE_ROOTUSER $CE_USER $CE_GROUP @CE_ADMIN_USER$
+our @EXPORT = qw($CE_DEVOPS_USER $CE_USER $CE_GROUP @CE_ADMIN_USER$
                  $CE_CLUSTER_PORT $CE_DEFAULT_VSERVER $CE_AGGR
 		 $CE_USER_ROOT $CE_DAEMON_ROOT 
                  $CE_DAEMON_VOL_SIZE 
