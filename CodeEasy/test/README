@@ -1,0 +1,36 @@
+################################################################################
+# Testing Readme file
+################################################################################
+
+
+Path to Bamm-Bamm work area
+/x/eng/bbsvl/daemon/DOT/dev/daemon_base/.filelist.temp_thread
+
+
+#--------------------------------------- 
+# AWS Test Instructions
+#--------------------------------------- 
+#   You can use the AWS instance and filer that we set up for our project.  
+#           |-> https://console.aws.amazon.com/console/home?region=us-west-1
+#
+#   You can log onto AWS with the following login info:
+#           Email address:    alireza.moshtaghi@netapp.com
+#           Password:         April.15
+#
+#   You can see instances here 
+#           |-> https://console.aws.amazon.com/ec2/v2/home?region=us-west-1#Instances:sort=instanceId
+#   
+#   The instance we used was DevOps-Build and you can connect to it using SSH:
+#           ssh -i /u/vsrividy/vidya.pem ubuntu@54.183.32.123
+
+#   Once you log onto this instance, you can ssh to the filer:
+#
+#   UNIX mount a new volume and change permissions on the mount
+#           sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
+#           sudo chown <usr:grp> <unix mount point>
+#
+#   UNIX unmount a volume
+#           sudo umount <unix mount point>
+#           
+#--------------------------------------- 
+
