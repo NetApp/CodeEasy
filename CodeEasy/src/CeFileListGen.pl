@@ -22,7 +22,6 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
 use Cwd;
 use File::Basename;
 use Getopt::Long;  # Perl library for parsing command line options

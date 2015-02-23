@@ -1,18 +1,35 @@
-# 
+################################################################################
+# Makefile for building CodeEasy C-programs 
+#
+# Programs:
+#   sur - is a program which allows a sub program to run with root permission.
+#
+#   fast_chown - is a program which reads a file of directories and files and 
+#                then performs a very fast parallel 'chown' operation to
+#                change permission of the files and directories
 #
 # Copyright (c) 2015 NetApp, Inc.
 # All rights reserved.
+################################################################################
 
+# sudo command
+#    because the two programs below will operate
+
+
+# build all targets
 all: sur fast_chown
 
+# build the 'sur' program
 sur: sur.c
 	sudo gcc -o sur sur.c
 	sudo chmod 4755 sur
 
-fast_chown: simple_chown.c
+# build the 'fast_chown' program
+fast_chown: fast_chown.c
 	sudo gcc -O2 -o fast_chown fast_chown.c
 	sudo chmod 4755 fast_chown
 
+# clean or remove prior builds 
 clean:
 	rm -rf sur fast_chown
 

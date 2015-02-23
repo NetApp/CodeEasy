@@ -48,6 +48,7 @@ our $progname="CeCreateFlexClone.pl";    # name of this program
 our $volume  = "ce_test_vol";      # cmdline arg: volume to create (default name)
 our $create_clone;                 # cmdline arg: create_clone
 our $remove_volume;                # cmdline arg: remove_volume
+our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
 
@@ -65,6 +66,9 @@ our $verbose;                      # cmdline arg: verbosity level
 # initialize access to NetApp filer
 #--------------------------------------- 
 our $naserver = &CeCommon::init_filer();
+
+# test connection to filer only...
+exit 0    if (defined $test_only);
 
 
 #--------------------------------------- 
@@ -108,6 +112,8 @@ sub parse_cmd_line {
 	      'cl|clone=s'       => \$clone_name,           # clone name
 	      'c|create'         => \$create_volume,        # create clone volume
 	      'r|remove'         => \$remove_volume,        # remove clone volume
+
+	      't|test_only'      => \$test_only,     # test filer connection then exit
 
               'v|verbose'        => \$verbose,              # increase output verbosity
 	      '<>'               => sub { &CMDParseError() },

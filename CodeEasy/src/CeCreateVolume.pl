@@ -50,6 +50,7 @@ our $create_volume;                # cmdline arg: create_volume
 our $remove_volume;                # cmdline arg: remove_volume
 our $snapshot_create;              # cmdline arg: snapshot name to create
 our $snapshot_delete;              # cmdline arg: snapshot name to delete
+our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
 
@@ -66,6 +67,9 @@ our $verbose;                      # cmdline arg: verbosity level
 # initialize access to NetApp filer
 #--------------------------------------- 
 our $naserver = &CeCommon::init_filer();
+
+# test connection to filer only...
+exit 0    if (defined $test_only);
 
 
 #--------------------------------------- 
@@ -103,6 +107,8 @@ sub parse_cmd_line {
               'vol|volume=s'     => \$volume,        # volume to create
 	      'c|create'         => \$create_volume, # remove volume
 	      'r|remove'         => \$remove_volume, # remove volume
+
+	      't|test_only'      => \$test_only,     # test filer connection then exit
 
               'v|verbose'        => \$verbose,       # increase output verbosity
 	      '<>'               => sub { &CMDParseError() },

@@ -23,7 +23,6 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
 use Cwd;
 use File::Basename;
 use Getopt::Long;  # Perl library for parsing command line options
@@ -195,7 +194,7 @@ $progname: Usage Information
 
       Examples:
 	create a filelist called /my_path/dir_to_scan/filelist.BOM
-        %> $progname -d /my_path/dir_to_chmod/ -f /my_path/filelist_BOM
+        %> $progname -user user_larry -d /my_path/dir_to_chmod/ -f /my_path/filelist_BOM
 
 ];
 

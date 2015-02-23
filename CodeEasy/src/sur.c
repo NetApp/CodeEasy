@@ -43,7 +43,7 @@ main (int argc, char ** argv) {
     if (argc <= 3) {
         fprintf(stderr, "\nERROR (%s): Invalid number of arguments.\n",       argv[0]);
 	fprintf(stderr,   "        Usage:  \%> %s <sur_dispatch cmd> <username> <cmdline to execute>\n\n", argv[0]);
-	fprintf(stderr,   "      Example:  \%> %s /codeeasy_path/bin/sur_dispatch builduser  'CeCreateClone ProjA_snapshot_nightly101' \n");
+	fprintf(stderr,   "      Example:  \%> %s /codeeasy_path/bin/sur_dispatch builduser  'CeCreateClone ProjA_snapshot_nightly101' \n", argv[0]);
 	fprintf(stderr,   "                will perform the equivalent of \%> chown builduser:<unchanged> file1 file2 file3\n\n");     
 	exit(1);
     }
