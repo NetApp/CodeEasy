@@ -50,7 +50,14 @@ our $release_dir = "$FindBin::Bin/../release";
 our $version_name;
 
 # list of things to package
-our @packaging_list = ('src', 'docs');
+our @packaging_list = ('src', 
+                       'docs' 
+		       );
+
+# list of files to remove from the release directory
+our @files_to_remove = ('src/fast_chown', 
+                        'src/sur'
+                        );
 
 
 ############################################################
@@ -189,6 +196,14 @@ sub package_release {
     } else {
 	print "ERROR ($progname): failed to remove CVS directories\n" .
 	      "     $cmd\n";
+    }
+
+    # remove misc files
+    foreach my $file (@files_to_remove) {
+	if (-e "$release_dir/$file" ) {
+	    $cmd = "/bin/rm -f $release_dir/$file";
+	    system($cmd);
+	}
     }
 
     # generate tarball
