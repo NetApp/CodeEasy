@@ -5,10 +5,10 @@
 #          technologies.  This script is not officially supported as a 
 #          standard NetApp product.
 #         
-# Purpose: Script to create flexclone of a parent volume snapshot
+# Purpose: Script to create/remove a snapshot of a parent volume
 #          
 #
-# Usage:   %> CeCreateVole.pl <args> 
+# Usage:   %> CeCreateSnapshot.pl <args> 
 #
 # Author:  Michael Johnson (michael.johnson@netapp.com)
 #           
@@ -17,18 +17,13 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
 use Cwd;
 use Getopt::Long;  # Perl library for parsing command line options
+use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
 
-# The FindBin helps indentify the path this executable and thus its path
-use FindBin();
-
 # load NetApp manageability SDK APIs
-use lib "$FindBin::Bin/../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
-use NaServer;
-use NaElement;
+#   --> this is done in the CeCommon.pm package
 
 # load CodeEasy packages
 use lib "$FindBin::Bin/.";
@@ -39,15 +34,12 @@ use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 ############################################################
 # Global Vars / Setup
 ############################################################
-# determine date
-my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
 
 our $progname="CeCreateSnapshot.pl";    # name of this program
 
 # command line argument values
-our $volume  = "ce_test_vol";      # cmdline arg: volume to create (default name)
+our $volume;                       # cmdline arg: volume to create (default name: $CeInit::CE_DEFAULT_VOLUME_NAME)
 our $snapshot_name;                # cmdline arg: snapshot name to create
-our $snapshot_create;              # cmdline arg: create snapshot 
 our $snapshot_delete;              # cmdline arg: delete snapshot
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
@@ -73,8 +65,9 @@ exit 0    if (defined $test_only);
 
 #--------------------------------------- 
 # create snapshot
+#    create snapshot unless -remove option is provided on the cmdline
 #--------------------------------------- 
-&snapshot_create() if (defined $snapshot_create);
+&snapshot_create() if (! defined $snapshot_delete);
 
 
 #--------------------------------------- 
@@ -105,7 +98,7 @@ sub parse_cmd_line {
 
               'vol|volume=s'     => \$volume,            # volume to snapshot
 	      's|snapshot=s'     => \$snapshot_name,     # snapshot name
-	      'c|create'         => \$snapshot_create,   # create snapshot
+
 	      'r|remove'         => \$snapshot_delete,   # remove snapshot
 
 	      't|test_only'      => \$test_only,     # test filer connection then exit
@@ -114,12 +107,20 @@ sub parse_cmd_line {
 	      '<>'               => sub { &CMDParseError() },
 	      ); 
 
-    # check that at least one of the actions has been selected
-    if ((! defined $snapshot_create) and (! defined $snapshot_delete)) {
-        print "\nERROR ($progname): An action has not been specified.  Either -create or -remove snapshot\n" .
-              "       must be specified on the command line.\n" .
-              "       Exiting...\n\n";
-        exit 1;
+
+    # check if volume name was passed on the command line
+    if (! defined $volume ) {
+	# command line volume name 
+
+    } elsif ( defined  $CeInit::CE_DEFAULT_VOLUME_NAME ){
+	# use default volume name if it is specified in the CeInit.pm file
+	$volume = "$CeInit::CE_DEFAULT_VOLUME_NAME";      
+    } else {
+	# no volume passed on the command line or set in the CeInit.pm file
+	print "ERROR ($progname): No volume name provided.\n" .
+	      "      use the -vol <volume name> option on the command line.\n" .
+	      "      Exiting...\n";
+	exit 1;
     }
 
 } # end of sub parse_cmd_line()
@@ -147,16 +148,18 @@ $progname: Usage Information
       -h|-help                        : show this help info
 
       -vol|-volume   <volume name>    : volume name 
-      -s  |-snapshot <snapshot name>  : volume name 
-                                        default value is ce_test_vol
-      -c|-create                      : create snapshot
+                                        default value is set in the CeInit.pm file
+				        by var \$CeInit::CE_DEFAULT_VOLUME_NAME
+
+      -s|-snapshot <snapshot name>    : volume name 
+
       -r|-remove                      : remove snapshot
 
       -v|-verbose                     : enable verbose output
 
       Examples:
 	create a snapshot for volume ce_test_vol
-        %> $progname -vol ce_test_vol -snapshot <ce_test_vol_snapshot_01 -create
+        %> $progname -volume ce_test_vol -snapshot ce_test_vol_snapshot_01 
 
 ];
 
@@ -186,7 +189,7 @@ sub snapshot_create {
     # create snapshot
     #--------------------------------------- 
     $out = $naserver->invoke("snapshot-create", "volume",   $volume, 
-                                                "snapshot", $snapshot_create);
+                                                "snapshot", $snapshot_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
@@ -197,7 +200,7 @@ sub snapshot_create {
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully created snapshot <$snapshot_create>\n";
+    print "INFO ($progname): Successfully created snapshot <$snapshot_name>\n";
 
 
 } # end of sub snapshot_create()

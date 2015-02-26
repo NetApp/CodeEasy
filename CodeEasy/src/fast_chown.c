@@ -43,10 +43,10 @@ int main(
 
     if (argc < 3 ) {
         fprintf(stderr, "\nERROR (%s): Invalid number of arguments.\n",       argv[0]);
-	fprintf(stderr,   "        Usage:  \%> %s <user id>  <file list>\n",   argv[0]);
-	fprintf(stderr,   "           or:  \%> %s <username> <file list>\n\n", argv[0]);
-	fprintf(stderr,   "      Example:  \%> %s builduser  file1 file2 file3\n");
-	fprintf(stderr,   "                will perform the equivalent of \%> chown builduser:<unchanged> file1 file2 file3\n\n");     
+	fprintf(stderr,   "        Usage:  &% %s <user id>  <file list>\n",   argv[0]);
+	fprintf(stderr,   "           or:  &% %s <username> <file list>\n\n", argv[0]);
+	fprintf(stderr,   "      Example:  &% %s builduser  file1 file2 file3\n", argv[0]);
+	fprintf(stderr,   "                will perform the equivalent of \% chown builduser:<unchanged> file1 file2 file3\n\n");     
 	exit(1);
     }
 
@@ -56,7 +56,7 @@ int main(
 
     // check if the uid is actually a username.
     // if so, then look up the associated uid
-    if (*endptr != '\0') {         /* Was not pure numeric string */
+    if (*endptr != '\0') {         /* Was not pure numeric string  */
         pwd = getpwnam(argv[1]);   /* Try getting UID for username */
         if (pwd == NULL) {
             perror("getpwnam");

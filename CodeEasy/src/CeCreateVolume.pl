@@ -5,7 +5,7 @@
 #          technologies.  This script is not officially supported as a 
 #          standard NetApp product.
 #         
-# Purpose: Script to create flexclone of a parent volume snapshot
+# Purpose: Script to create/removes a volume 
 #          
 #
 # Usage:   %> CeCreateVole.pl <args> 
@@ -17,41 +17,34 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
 use Cwd;
 use Getopt::Long;  # Perl library for parsing command line options
+use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
 
-# The FindBin helps indentify the path this executable and thus its path
-use FindBin();
-
 # load NetApp manageability SDK APIs
-use lib "$FindBin::Bin/../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
-use NaServer;
-use NaElement;
+#   --> this is done in the CeCommon.pm package
 
 # load CodeEasy packages
 use lib "$FindBin::Bin/.";
-use CeInit;        # contains CodeEasy script setup values
+use CeInit;        # contains CodeEasy script setup values (CeInit.pm file)
 use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 
 
 ############################################################
 # Global Vars / Setup
 ############################################################
-# determine date
-my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
 
 our $progname="CeCreateVol.pl";    # name of this program
 
 # command line argument values
-our $volume  = "ce_test_vol";      # cmdline arg: volume to create (default name)
-our $create_volume;                # cmdline arg: create_volume
+our $volume;                       # cmdline arg: volume to create (default name: $CeInit::CE_DEFAULT_VOLUME_NAME)
 our $remove_volume;                # cmdline arg: remove_volume
 our $snapshot_create;              # cmdline arg: snapshot name to create
 our $snapshot_delete;              # cmdline arg: snapshot name to delete
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
+
 
 
 ############################################################
@@ -74,8 +67,9 @@ exit 0    if (defined $test_only);
 
 #--------------------------------------- 
 # create volume
+#   a volume is created by default - unless the -remove option was given
 #--------------------------------------- 
-&create_volume()   if ($create_volume);
+&create_volume()   if (! defined $remove_volume);
 
 
 #--------------------------------------- 
@@ -105,7 +99,6 @@ sub parse_cmd_line {
   GetOptions ("h|help"           => sub { &show_help() },   
 
               'vol|volume=s'     => \$volume,        # volume to create
-	      'c|create'         => \$create_volume, # remove volume
 	      'r|remove'         => \$remove_volume, # remove volume
 
 	      't|test_only'      => \$test_only,     # test filer connection then exit
@@ -114,13 +107,22 @@ sub parse_cmd_line {
 	      '<>'               => sub { &CMDParseError() },
 	      ); 
 
-    # check that at least one of the actions has been selected
-    if ((! defined $create_volume) and (! defined $remove_volume)) {
-        print "\nERROR ($progname): An action has not been specified.  Either -create or -remove volume\n" .
-              "       must be specified on the command line.\n" .
-              "       Exiting...\n\n";
-        exit 1;
+
+    # check if volume name was passed on the command line
+    if (! defined $volume ) {
+	# command line volume name 
+
+    } elsif ( defined  $CeInit::CE_DEFAULT_VOLUME_NAME ){
+	# use default volume name if it is specified in the CeInit.pm file
+	$volume = "$CeInit::CE_DEFAULT_VOLUME_NAME";      
+    } else {
+	# no volume passed on the command line or set in the CeInit.pm file
+	print "ERROR ($progname): No volume name provided.\n" .
+	      "      use the -vol <volume name> option on the command line.\n" .
+	      "      Exiting...\n";
+	exit 1;
     }
+
 
 } # end of sub parse_cmd_line()
 
@@ -146,15 +148,19 @@ $progname: Usage Information
       -h|-help                    : show this help info
 
       -vol|-volume <volume name>  : volume name 
-                                    default value is ce_test_vol
-      -c|-create                  : create volume
-      -r|-remove                  : remove volume
+                                    default value is set in the CeInit.pm file
+				    by var \$CeInit::CE_DEFAULT_VOLUME_NAME
+    
+      -r|-remove                  : remove volume 
 
       -v|-verbose                 : enable verbose output
 
       Examples:
-	create a volume name <ce_test_vol>
-        %> $progname -vol ce_test_vol
+	create a volume named <ce_test_vol>
+        %> $progname -vol ce_test_vol 
+
+	remove a volume named <ce_test_vol>
+        %> $progname -vol ce_test_vol -remove
 
 ];
 
@@ -179,7 +185,6 @@ $progname: Usage Information
 #   $policy:          Export policy of volume
 #   $snapshot_policy: The snapshot_policy for snapshots of volume
 ###################################################################################   
-
 sub create_volume {
 
     # temp vars for getting filer info and status
@@ -195,7 +200,15 @@ sub create_volume {
     # NOTE: volumes will be created by the DEAMON, so they will be mounted to the
     # CE_DAEMON_ROOT vs the CE_USER_ROOT
 
-    my $junction_path = "$CeInit::CE_DAEMON_ROOT/$volume";
+    #my $junction_path = "$CeInit::CE_DAEMON_ROOT/$volume";
+    my $junction_path = "$CeInit::CE_MOUNT_DAEMON_ROOT/$volume";
+    print "DEBUG: junction path = $junction_path \n";
+
+
+    my $user_id  = getpwnam($CeInit::CE_DEVOPS_USER); 
+    my $group_id = getpwnam($CeInit::CE_GROUP); 
+    print "DEBUG: USER  = $CeInit::CE_DEVOPS_USER  UID = $user_id \n";
+    print "DEBUG: GROUP = $CeInit::CE_GROUP  GID = $group_id \n";
 
     #--------------------------------------- 
     # create volume
@@ -207,6 +220,8 @@ sub create_volume {
                                               "unix-permissions",     $CeInit::CE_UNIX_PERMISSIONS, 
                                               "export-policy",        $CeInit::CE_POLICY_EXPORT, 
                                               "snapshot-policy",      $CeInit::CE_SSPOLICY_DEVOPS_USER, 
+                                              "user-id",              $user_id, 
+                                              "group-id",             $group_id,
                                               "space-reserve",        "none");
 
     # check status of the volume creation
@@ -221,6 +236,8 @@ sub create_volume {
     print "INFO ($progname): Successfully created volume <$volume>\n";
 
 } # end of sub create_volume()
+
+
 
 ###################################################################################
 # remove_volume:    Remove volume
@@ -243,8 +260,8 @@ sub remove_volume {
         print "ERROR ($progname): Unable to unmount volume $volume \n";
         print "ERROR ($progname): volume-unmount returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
-        exit 1;
+        #print "ERROR ($progname): Exiting with error.\n";
+        #exit 1;
     }
     print "INFO ($progname): Successfully unmounted volume <$volume>\n";
 
@@ -259,8 +276,8 @@ sub remove_volume {
         print "ERROR ($progname): Unable to take volume $volume offline\n";
         print "ERROR ($progname): volume-offline returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
-        exit 1;
+        #print "ERROR ($progname): Exiting with error.\n";
+        #exit 1;
     }
     print "INFO ($progname): Successfully took volume <$volume> offline\n";
 

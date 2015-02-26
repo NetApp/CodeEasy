@@ -52,10 +52,11 @@ our @CE_ADMIN_USER  = ("vsadmin","devops123");
     #      sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
     our $CE_MOUNT_ROOT_DIR    = "/share/devops";    
 						    
+    our $CE_DEFAULT_VOLUME_NAME    = "ce_test_volume";
     # location on the filer where DAEMON's volume and snapshots are stored
-    our $CE_MOUNT_DAEMON_ROOT = "$CE_MOUNT_ROOT_DIR/daemon";
+    our $CE_MOUNT_DAEMON_ROOT      = "$CE_MOUNT_ROOT_DIR/daemon";
     # location on the filer where USER FlexClone volumes are stored
-    our $CE_MOUNT_USER_ROOT   = "$CE_MOUNT_ROOT_DIR/users";
+    our $CE_MOUNT_USER_ROOT        = "$CE_MOUNT_ROOT_DIR/users";
 
     # Volume attributes
     our $CE_DAEMON_VOL_SIZE        = "3000g";
@@ -67,7 +68,14 @@ our @CE_ADMIN_USER  = ("vsadmin","devops123");
     our $CE_ATIME_UPDATE           = "false";
     our $CE_UNIX_PERMISSIONS       = "775";
 
+    # misc UNIX tool paths - this may need to be modified based on customer
+    # environment
+    our $CE_CMD_FIND   = "/usr/bin/find";
+    our $CE_CMD_XARGS  = "/usr/bin/xargs";
 
+    # sur script for handling permission changes etc.  
+    # compiled as part of this kit
+    our $CE_CMD_SUR    = "$FindBin::Bin/sur";
 
 
 ########################################
@@ -77,9 +85,10 @@ our @EXPORT = qw($CE_DEVOPS_USER $CE_USER $CE_GROUP @CE_ADMIN_USER$
                  $CE_CLUSTER_PORT $CE_DEFAULT_VSERVER $CE_AGGR
 		 $CE_USER_ROOT $CE_DAEMON_ROOT 
                  $CE_DAEMON_VOL_SIZE 
-                 $CE_MOUNT_ROOT_DIR $CE_MOUNT_DAEMON_ROOT $CE_MOUNT_USER_ROOT
+                 $CE_DEFAULT_VOLUME_NAME  $CE_MOUNT_ROOT_DIR $CE_MOUNT_DAEMON_ROOT $CE_MOUNT_USER_ROOT
                  $CE_CLONE_SIZE $CE_SSRESERVE_PERCENT $CE_VOLUME_SPACE_GUARANTEE $CE_SSPOLICY_DEVOPS_USER 
 		 $CE_POLICY_EXPORT $CE_ATIME_UPDATE $CE_UNIX_PERMISSIONS
+                 $CE_CMD_FIND $CE_CMD_XARGS 
                  $CE_P4PORT $CE_CMD_P4 );
 
 

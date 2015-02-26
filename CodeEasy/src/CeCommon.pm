@@ -24,18 +24,26 @@
 # declair this file (.pm) as a Perl package
 package CeCommon;
 
+use Env;           # package to allow reading UNIX environment vars
 use Cwd;
+use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
 
-# The FindBin helps indentify the path this executable and thus its path
-use FindBin();
 
+#---------------------------------------- 
 # load NetApp manageability SDK APIs
-use lib "$FindBin::Bin/../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
-use NaServer;
-use NaElement;
+#---------------------------------------- 
+# SDK setenv not set, assume the SDK is in parallel to the CodeEasy
+# tarball installation    ***** CUSTOMIZE ME *****
+use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
 
+# load the NetApp Manageability SDK components
+use NaServer;      
+use NaElement;  
+
+#---------------------------------------- 
 # load CodeEasy packages
+#---------------------------------------- 
 use lib "$FindBin::Bin/.";
 use CeInit;
 

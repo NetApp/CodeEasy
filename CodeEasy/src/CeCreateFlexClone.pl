@@ -5,7 +5,8 @@
 #          technologies.  This script is not officially supported as a 
 #          standard NetApp product.
 #         
-# Purpose: Script to create flexclone of a parent volume snapshot
+# Purpose: Script to create flexclone of a parent volume snapshot based on 
+#          a particular snapshot name
 #          
 #
 # Usage:   %> CeCreateFlexClone.pl <args> 
@@ -17,18 +18,13 @@
 #
 ################################################################################
 
-use Env;	   # Perl library which contains the ENV function;
 use Cwd;
 use Getopt::Long;  # Perl library for parsing command line options
+use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
 
-# The FindBin helps indentify the path this executable and thus its path
-use FindBin();
-
 # load NetApp manageability SDK APIs
-use lib "$FindBin::Bin/../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
-use NaServer;
-use NaElement;
+#   --> this is done in the CeCommon.pm package
 
 # load CodeEasy packages
 use lib "$FindBin::Bin/.";
@@ -39,15 +35,14 @@ use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 ############################################################
 # Global Vars / Setup
 ############################################################
-# determine date
-my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
 
 our $progname="CeCreateFlexClone.pl";    # name of this program
 
 # command line argument values
-our $volume  = "ce_test_vol";      # cmdline arg: volume to create (default name)
-our $create_clone;                 # cmdline arg: create_clone
-our $remove_volume;                # cmdline arg: remove_volume
+our $volume;                       # cmdline arg: volume to create (default name: $CeInit::CE_DEFAULT_VOLUME_NAME)
+our $snapshot_name;                # cmdline arg: snapshot to use for clone image
+our $clone_name;                   # cmdline arg: create_clone
+our $volume_delete;                # cmdline arg: remove volume
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
@@ -73,21 +68,20 @@ exit 0    if (defined $test_only);
 
 #--------------------------------------- 
 # create flexclone
+#    flexclone volume is created by default - unless -remove is specified
 #--------------------------------------- 
-my $parent_snapshot = "mj_snap3";
-my $clone_name = "${parent_snapshot}_clone";
-&clone_create($volume, $parent_snapshot, $clone_name ) if ($create_clone);
+$clone_name = "${snapshot_name}_clone";
+&clone_create($volume, $snapshot_name, $clone_name ) if (! defined $volume_delete);
 
 
 #--------------------------------------- 
 # remove volume (NOTE: removing a FlexClone is identical to removing a volume)
 #--------------------------------------- 
-&remove_volume() if ($remove_volume);
+&remove_volume() if ($volume_delete);
 
 
 # exit program successfully
-print "$progname exited successfully.\n" .
-      "################################################################################\n\n";
+print "$progname exited successfully.\n\n";
 exit 0;
 
 
@@ -108,24 +102,32 @@ sub parse_cmd_line {
   GetOptions ("h|help"           => sub { &show_help() },   
 
               'vol|volume=s'     => \$volume,               # volume to create
-	      's|snapshot=s'     => \$snapshot_create,      # snapshot name
+	      's|snapshot=s'     => \$snapshot_name,        # snapshot name
 	      'cl|clone=s'       => \$clone_name,           # clone name
-	      'c|create'         => \$create_volume,        # create clone volume
-	      'r|remove'         => \$remove_volume,        # remove clone volume
 
-	      't|test_only'      => \$test_only,     # test filer connection then exit
+	      'r|remove'         => \$volume_delete,        # remove clone volume
+
+	      't|test_only'      => \$test_only,            # test filer connection then exit
 
               'v|verbose'        => \$verbose,              # increase output verbosity
 	      '<>'               => sub { &CMDParseError() },
 	      ); 
 
-    # check that at least one of the actions has been selected
-    if ((! defined $create_volume) and (! defined $remove_volume)) {
-        print "\nERROR ($progname): An action has not been specified.  Either -create or -remove volume\n" .
-              "       must be specified on the command line.\n" .
-              "       Exiting...\n\n";
-        exit 1;
-   }
+    # check if volume name was passed on the command line
+    if (defined $volume ) {
+	# use volume name passed from the command line 
+
+    } elsif ( defined  $CeInit::CE_DEFAULT_VOLUME_NAME ){
+	# use default volume name if it is specified in the CeInit.pm file
+	$volume = "$CeInit::CE_DEFAULT_VOLUME_NAME";      
+    } else {
+	# no volume passed on the command line or set in the CeInit.pm file
+	print "ERROR ($progname): No volume name provided.\n" .
+	      "      use the -vol <volume name> option on the command line.\n" .
+	      "      Exiting...\n";
+	exit 1;
+    }
+
 
 } # end of sub parse_cmd_line()
 
@@ -150,11 +152,13 @@ my $helpTxt = qq[
 $progname: Usage Information 
       -h|-help                       : show this help info
 
-      -vol|-volume <volume name>     : volume name 
-                                       default value is ce_test_vol
-      -s |-snapshot <snapshot name>  : name of the snapshot to clone
-      -cl|-clone    <clone name>     : name of the snapshot to clone
-      -c|-create                     : create volume
+      -vol|-volume  <volume name>    : volume name 
+                                       default value is set in the CeInit.pm file
+				       by var \$CeInit::CE_DEFAULT_VOLUME_NAME
+
+      -s |-snapshot <snapshot name>  : name of the Snapshot  to clone
+      -cl|-clone    <clone name>     : name of the FlexClone to create
+    
       -r|-remove                     : remove volume
 
       -v|-verbose                    : enable verbose output
@@ -162,7 +166,8 @@ $progname: Usage Information
       Examples:
 	create a FlexClone with the name <ce_test_vol>
 	starting with snapshot
-        %> $progname -vol ce_test_vol -snapshot ce_test_snapshot -clone %my_flexclone_ce_test
+        %> $progname -volume ce_test_vol -snapshot ce_test_snapshot \
+	             -clone  my_flexclone_ce_test 
 
 ];
 
@@ -178,17 +183,20 @@ $progname: Usage Information
 #   $volume:          The volume that contains the snapshot
 #   $snapshot:        name of the parent snapshot to clone
 #   $clone:           name of the new clone to create
-###################################################################################
+#
 # create clone from parent volume
 #   my $out = $naserver->invoke("volume-clone-create", "parent-snapshot", $snapshot, 
 #                                                      "parent-volume",   $volume, 
 #                                                      "volume",          $clone_name,
 #                                                      "junction-path",   $junction_path
+###################################################################################
 sub clone_create { 
 
-    # arguments passed into sub
-    my ($volume, $parent_snapshot,
-        $clone_name ) = @_;
+    # arguments passed into this sub
+    my ($volume, 
+        $parent_snapshot,
+        $clone_name 
+	) = @_;
 
     # temp vars for getting filer info and status
     my $out;
@@ -203,7 +211,13 @@ sub clone_create {
 
     # NOTE: clones will be created by users, so they will be mounted to the
     # CE_USER_ROOT vs the CE_DAEMON_ROOT
-    my $junction_path = "$CeInit::CE_USER_ROOT/$clone_name";
+    my $junction_path = "$CeInit::CE_MOUNT_USER_ROOT/$clone_name";
+    #my $junction_path = "$CeInit::CE_MOUNT_DAEMON_ROOT/$clone_name";
+    print "DEBUG: clone_name      = $clone_name\n" .
+          "       parent-volume   = $volume\n" .
+          "       parent-snapshot = $parent_snapshot\n" .
+          "       junction path   = $junction_path \n";
+                  
 
 
     #--------------------------------------- 
@@ -264,50 +278,50 @@ sub remove_volume {
     #--------------------------------------- 
     # first make sure the volume is unmounted
     #--------------------------------------- 
-    $out = $naserver->invoke("volume-unmount",  "volume-name",  $volume);
+    $out = $naserver->invoke("volume-unmount",  "volume-name",  $clone_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to unmount volume $volume \n";
+        print "ERROR ($progname): Unable to unmount FlexClone volume $clone_name\n";
         print "ERROR ($progname): volume-unmount returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully unmounted volume <$volume>\n";
+    print "INFO ($progname): Successfully unmounted volume <$clone_name>\n";
 
     #--------------------------------------- 
     # 2nd make sure the volume is offline
     #--------------------------------------- 
-    $out = $naserver->invoke("volume-offline",  "name",  $volume);
+    $out = $naserver->invoke("volume-offline",  "name",  $clone_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to take volume $volume offline\n";
+        print "ERROR ($progname): Unable to take FlexClone volume $clone_name offline\n";
         print "ERROR ($progname): volume-offline returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully took volume <$volume> offline\n";
+    print "INFO ($progname): Successfully took FlexClone volume <$clone_name> offline\n";
 
     #--------------------------------------- 
     # 3rd remove/delete volume
     #--------------------------------------- 
-    $out = $naserver->invoke("volume-destroy",  "name",         $volume);
+    $out = $naserver->invoke("volume-destroy",  "name",         $clone_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to remove/destroy volume $volume \n";
+        print "ERROR ($progname): Unable to remove/destroy FlexClone volume $clone_name \n";
         print "ERROR ($progname): volume-destroy returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully removed volume <$volume>\n";
+    print "INFO ($progname): Successfully removed volume <$clone_name>\n";
 
 } # end of sub remove_volume()
 

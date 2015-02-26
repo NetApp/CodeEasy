@@ -31,6 +31,10 @@ use strict;        # require strict programming rules
 # The FindBin helps indentify the path this executable and thus its path
 use FindBin ();
 
+# load CodeEasy packages
+use lib "$FindBin::Bin/.";
+use CeInit;        # contains CodeEasy script setup values
+
 ############################################################
 # Global Vars / Setup
 ############################################################
@@ -206,7 +210,7 @@ sub create_filelist_BOM {
     # create sub list of directories but only one level deep
     # -maxdepth 1 => maximum search depth 1 directory
     # -type d     => type directory
-    my @dir_list = qx(/bin/find $root_directory -maxdepth 1 -type d );
+    my @dir_list = qx($CeInit::CE_CMD_FIND $root_directory -maxdepth 1 -type d );
     chomp(@dir_list);
 
     my @new_dir_list;
@@ -276,7 +280,7 @@ sub create_filelist_BOM {
     print "INFO ($progname): All threads completed\n";
 
     # Accumlating all the fileslist into a single file
-    my $cmd = "/bin/find $temp_dir -name \*.list";
+    my $cmd = "$CeInit::CE_CMD_FIND $temp_dir -name \*.list";
     my $list_filelists = qx($cmd);
     chomp $list_filelists;
     $cnt = 0;
@@ -429,7 +433,7 @@ sub run_file_find {
     my $dir_list_file = "$temp_dir/$dir_basename.list";
 
     # command to find files and directories
-    my $cmd = "/bin/find './$dir_basename' -print > $dir_list_file ";
+    my $cmd = "$CeInit::CE_CMD_FIND './$dir_basename' -print > $dir_list_file ";
     if (system($cmd) == 0) {
         print "INFO: performed find on $dir -> list file $dir_list_file \n" if (defined $verbose);
     } else {
