@@ -8,12 +8,16 @@
 #                then performs a very fast parallel 'chown' operation to
 #                change permission of the files and directories
 #
+#   PERMISSIONS: chmod 0711    -> user            read/write/exe
+#                                 group and other exe only
+#
 # Copyright (c) 2015 NetApp, Inc.
 # All rights reserved.
 ################################################################################
 
 # sudo command
-#    because the two programs below will operate
+#    because the two programs below will compiled as root, since root
+#    permissions are required to do operations like 'chown'.
 
 
 # build all targets
@@ -22,12 +26,12 @@ all: sur fast_chown
 # build the 'sur' program
 sur: sur.c
 	sudo gcc -o sur sur.c
-	sudo chmod 4755 sur
+	sudo chmod 0711 sur
 
 # build the 'fast_chown' program
 fast_chown: fast_chown.c
 	sudo gcc -O2 -o fast_chown fast_chown.c
-	sudo chmod 4755 fast_chown
+	sudo chmod 0711 fast_chown
 
 # clean or remove prior builds 
 clean:
