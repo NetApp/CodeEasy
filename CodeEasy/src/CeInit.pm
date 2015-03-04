@@ -1,9 +1,9 @@
 ################################################################################
-# Basic Initialization Variables
+# CodeEasy Setup File
+#    Basic Initialization Variables
 # 
 # This file should be customized for each project
 ################################################################################
-
 
 # declair this file (.pm) as a Perl package
 package CeInit;
@@ -12,18 +12,18 @@ package CeInit;
 ########################################
 # Users Info - for login permisions etc. 
 ########################################
-# MJ TODO: What are these used for - need description and tie back to code
-our $CE_DEVOPS_USER = "devops";      # user who has filer permissions.  can do any write 
-                                     # operations including add/remove volume/snaps/etc.
-				     # this is the user the Daemon runs as
 
-our $CE_USER        = "unknown";     # Average user - set to unknown for now until determined by script
-our $CE_GROUP       = "ubuntu";      # UNIX group name: project or dept group to use
+    our $CE_DEVOPS_USER = "devops";      # user who has filer permissions.  can do any write 
+					 # operations including add/remove volume/snaps/etc.
+					 # this is the user the Daemon runs as
 
-# NetApp filer access usr/pass pair
-# admin permissions to access filer - used as part of volume creation process
-#   Example:    $naserver->set_admin_user("vsadmin", "devops123");
-our @CE_ADMIN_USER  = ("vsadmin","devops123");
+    our $CE_USER        = "unknown";     # Average user - set to unknown for now until determined by script
+    our $CE_GROUP       = "ubuntu";      # UNIX group name: project or dept group to use
+
+    # NetApp filer access usr/pass pair
+    # admin permissions to access filer - used as part of volume creation process
+    #   Example:    $naserver->set_admin_user("vsadmin", "devops123");
+    our @CE_ADMIN_USER  = ("vsadmin","devops123");
 
 
 

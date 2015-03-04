@@ -1,0 +1,137 @@
+################################################################################
+# CodeEasy QuickStart Guide
+################################################################################
+
+
+****************************************
+  Installation
+****************************************
+    STEP 1: Download NetApp Managability SDK 
+	The SDK can be found on the mysupport.netapp.com 
+	Downloads -> Software -> NetApp Manageability SDK
+	Select "All Platforms" -> Go!
+	Select "NetApp Manageability SDK 5.2.2" -> View & Download
+
+	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.2.2.zip
+
+    STEP 2: Place the CodeEasy evalkit and the SDK next to each other.
+	%> cd <workspace>
+	%> unzip netapp-manageability-sdk-5.2.2.zip
+
+    STEP 3: Download and untar the CodeEasy evalkit
+	%> tar -zxvf CodeEasy_1.x.x-Alpha.tgz
+
+    The final directory structure should look something like.
+    <workspace>/
+    	netapp-manageability-sdk-5.2.2/
+	CodeEasy_1.0.0-Alpha/
+
+    The CodeEasy Perl scripts assume the SDK is at the same level as the eval
+    kit.  This can be change by editing the .pl script if a different location
+    is desired.
+
+
+
+****************************************
+  Devops Flow Steps
+****************************************
+
+    Login as user 'devops'
+	%> sudo su - devops
+
+
+    ----------------------------------------
+    Setup Steps
+    ----------------------------------------
+
+    Step #1A: Mount Junction Path
+	%> sudo mount -t nfs sv5-devops-01:/share/devops /home/ubuntu/mj_perforce/mnt
+
+
+    Step #1B: Compile sur and fast_chown scripts
+	This step requires sudo previleges - which in this case user 'devops' has
+	sudu permissions setup to perform various operations - which needs to be
+	detailed (TBD).
+
+	%> cd <CodeEasy dir>/src
+	%> make all
+
+	This should build 'sur' and 'fast_chown' executables.  To clean and re-try
+	the compile
+	%> make clean all
+
+
+    ----------------------------------------
+    Continuous Integration Flow Steps
+    ----------------------------------------
+
+    Step #2: Create new volume 
+	%> ./CeCreateVolume.pl -vol ce_test_volume
+
+	This will create a volume which is automatically mounted at /home/mj_perforce/mnt/daemon/ce_test_daemon
+	because we specified a junction-path, user_id, group_id, and unix-permissions with the volume-create
+	command, the new volume is mounted and permission set ready to go.
+
+	NOTE: the default volume name can be set in the CeInit.pm file 
+	      look for the variable $CE_DEFAULT_VOLUME_NAME 
+
+    Step #3: Populate the test volume with stuff 
+	This of course will be a Perforce or GiT checkout of some sort.  For the
+	purposes of this initial testing without a RCS tool, we will just copy a
+	bunch of files - of significant size - to the new volume.
+
+	%> cp -R /home/ubuntu/mj_perforce/pf_evalkit/netapp-manageability-sdk-5.2.2 /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/
+
+    Step #4: Create a file list to be later when changing ownership of the flexclone
+
+	%> ./CeFileListGen.pl -d /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume
+
+	This step will create a file in the volume called /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/filelist_BOM
+	Again this file will be read by the CeChownList.pl script to change the
+	flexclone directory and file ownership from the Daemon (aka build user)
+	ownership to the new users ownership.
+
+    Step #5: Create a Snapshot called ce_test_snap_01
+	%> ./CeCreateSnapshot.pl -vol ce_test_volume -snapshot ce_test_snap_01
+
+	There should now be a new snapshot at /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/.snapshot/ce_test_snap_01
+
+
+
+****************************************
+  Developer (aka normal user) Flow Steps
+****************************************
+
+    Switch back to normal user
+	%> exit     (if logged in as devops)
+
+
+    Step #6: Create a FlexClone based on the Snapshot created in step #5
+
+	%> ./CeCreateFlexClone.pl -volume ce_test_volume -snapshot ce_test_snap_01 -clone ce_test_snap_01_clone
+
+	There should now be a FlexClone volume mounted at UNIX path /home/mj_perforce/mnt/users/ce_test_snap_01_clone
+	Note that the permissions at this point on the files and directories are
+	the same as that of the Snapshot from which it came.
+
+    Step #7: Change ownership of the FlexClone volume to that of the current user
+
+	%> ./sur ./CeChownList.pl devops -d /home/ubuntu/mj_perforce/mnt/users/ce_test_snap_01_clone -u ubuntu
+
+	The FlexClone volume should now have the permission of the normal
+	users - in this case user 'ubuntu'.  
+
+    Step #8: Update Source Control setup
+	Since this example does not use Perforce, SVN, GiT or CVS there is
+	nothing to do.  
+
+	Perforce - post FlexClone command
+	%> p4 client
+	%> p4 flush
+	--> You are all set and ready to develop as normal
+
+
+
+
+
+

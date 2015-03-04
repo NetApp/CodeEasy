@@ -70,7 +70,6 @@ exit 0    if (defined $test_only);
 # create flexclone
 #    flexclone volume is created by default - unless -remove is specified
 #--------------------------------------- 
-$clone_name = "${snapshot_name}_clone";
 &clone_create($volume, $snapshot_name, $clone_name ) if (! defined $volume_delete);
 
 
@@ -126,6 +125,24 @@ sub parse_cmd_line {
 	      "      use the -vol <volume name> option on the command line.\n" .
 	      "      Exiting...\n";
 	exit 1;
+    }
+
+    # check that a snapshot and clone_name were specified
+    if (! defined $snapshot_name) {
+	print "ERROR ($progname): No SnapShot name provided.\n" .
+	      "      Use the -snapshot <snap_name> option.\n" .
+	      "Exiting...\n";
+	exit 1;
+
+    }
+
+    # check that a snapshot and clone_name were specified
+    if (! defined $snapshot_name) {
+	print "ERROR ($progname): No SnapShot name provided.\n" .
+	      "      Use the -snapshot <snap_name> option.\n" .
+	      "Exiting...\n";
+	exit 1;
+
     }
 
 
@@ -204,21 +221,36 @@ sub clone_create {
 
 
     #--------------------------------------- 
+    # get current users name and
+    # make sure user has a directory at mount point
+    #--------------------------------------- 
+    my $username = getpwuid( $< ); chomp $username;
+    my $UNIX_mount_dir = "$CeInit::CE_USER_ROOT/$username";
+
+    # create user path directory
+    if ( system ("/bin/mkdir -p $UNIX_mount_dir") == 0) {
+	print "ERROR ($progname): Could not create user workspace.\n" .
+	      "      $UNIX_mount_dir\n";
+    }
+    print "INFO  ($progname): FleClone volume will be mounted at $UNIX_mount_dir\n";
+
+
+    #--------------------------------------- 
     # determine junction path  (mount point)
     #--------------------------------------- 
     # put the new volume at the end of the pre-mounted root directory
     # this will make it so the new volume will automatically be mounted
 
     # NOTE: clones will be created by users, so they will be mounted to the
-    # CE_USER_ROOT vs the CE_DAEMON_ROOT
-    my $junction_path = "$CeInit::CE_MOUNT_USER_ROOT/$clone_name";
-    #my $junction_path = "$CeInit::CE_MOUNT_DAEMON_ROOT/$clone_name";
-    print "DEBUG: clone_name      = $clone_name\n" .
+    # CE_MOUNT_USER_ROOT vs the CE_MOUNT_DAEMON_ROOT
+    my $junction_path = "$CeInit::CE_MOUNT_USER_ROOT/$username/$clone_name";
+
+    print "INFO : clone_name      = $clone_name\n" .
           "       parent-volume   = $volume\n" .
           "       parent-snapshot = $parent_snapshot\n" .
-          "       junction path   = $junction_path \n";
+          "       junction path   = $junction_path \n" .
+          "       UNIX Mount path = $UNIX_mount_dir/$clone_name \n";
                   
-
 
     #--------------------------------------- 
     # create flexclone
@@ -247,7 +279,6 @@ sub clone_create {
     # to the current user.
     #--------------------------------------- 
     &chown_clone();
-
 
 } # end of sub clone_create()
 
