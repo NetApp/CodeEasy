@@ -6,7 +6,7 @@
 #          standard NetApp product.
 #         
 # Purpose: This is a common Perl package which is included in the calling Perl
-#          scripts vis the 'use <package>' construct
+#          scripts vis the 'use <package>' constct
 #          variables and sub-routines are called from other scripts as follows;
 #              $my_variable   $CeCommon::VARIABLE
 #              $my_subroutine $CeCommon::my_subroutine
@@ -62,7 +62,7 @@ sub init_filer {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    my $naserver = NaServer->new($CeInit::CE_CLUSTER_PORT, 1, 21);
+    my $naserver = NaServer->new($CeInit::CE_CLUSTER_PORT, 1, 1);
 
     #$naserver->set_admin_user("vsadmin", "devops123");
     $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);

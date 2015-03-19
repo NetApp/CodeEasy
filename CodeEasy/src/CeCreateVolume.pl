@@ -155,6 +155,8 @@ $progname: Usage Information
 
       -v|-verbose                 : enable verbose output
 
+      -t|-test                    : test connection to filer then exit
+
       Examples:
 	create a volume named <ce_test_vol>
         %> $progname -vol ce_test_vol 

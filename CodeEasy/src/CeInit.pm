@@ -17,12 +17,12 @@ package CeInit;
 					 # operations including add/remove volume/snaps/etc.
 					 # this is the user the Daemon runs as
 
-    our $CE_USER        = "unknown";     # Average user - set to unknown for now until determined by script
     our $CE_GROUP       = "ubuntu";      # UNIX group name: project or dept group to use
 
     # NetApp filer access usr/pass pair
     # admin permissions to access filer - used as part of volume creation process
     #   Example:    $naserver->set_admin_user("vsadmin", "devops123");
+    # IMPORTANT: the user who has ontapi application access
     our @CE_ADMIN_USER  = ("vsadmin","devops123");
 
 
@@ -42,8 +42,8 @@ package CeInit;
 ########################################
 # NetApp Storage Config Info  
 ########################################
-    our $CE_CLUSTER_PORT    = "sv5-devops-01";    
-    our $CE_DEFAULT_VSERVER = "sv5-devops-01";
+    our $CE_CLUSTER_PORT    = "sv5-devops-01";   # management port 
+    our $CE_DEFAULT_VSERVER = "sv5-devops-01";   # name of the vserver port
     our $CE_AGGR            = "aggr_devops_05";
 
     # Storage Mount Points
@@ -58,11 +58,12 @@ package CeInit;
     # location on the filer where USER FlexClone volumes are stored
     our $CE_MOUNT_USER_ROOT        = "$CE_MOUNT_ROOT_DIR/users";
 
-    # Volume attributes
+    #---------------------------------------- 
+    # Volume attributes 
+    #   ONLY USED with CeCreateVolume.pl
+    #---------------------------------------- 
     our $CE_DAEMON_VOL_SIZE        = "3000g";
-    our $CE_CLONE_SIZE             = 500 * (10 ** 9);
     our $CE_SSRESERVE_PERCENT      = 20;
-    our $CE_VOLUME_SPACE_GUARANTEE = "none";
     our $CE_SSPOLICY_DEVOPS_USER   = "devops_user";
     our $CE_POLICY_EXPORT          = "aws_bb2";
     our $CE_ATIME_UPDATE           = "false";
@@ -81,12 +82,12 @@ package CeInit;
 ########################################
 # Export variable for use by flow
 ########################################
-our @EXPORT = qw($CE_DEVOPS_USER $CE_USER $CE_GROUP @CE_ADMIN_USER$
+our @EXPORT = qw($CE_DEVOPS_USER $CE_GROUP @CE_ADMIN_USER$
                  $CE_CLUSTER_PORT $CE_DEFAULT_VSERVER $CE_AGGR
 		 $CE_USER_ROOT $CE_DAEMON_ROOT 
                  $CE_DAEMON_VOL_SIZE 
                  $CE_DEFAULT_VOLUME_NAME  $CE_MOUNT_ROOT_DIR $CE_MOUNT_DAEMON_ROOT $CE_MOUNT_USER_ROOT
-                 $CE_CLONE_SIZE $CE_SSRESERVE_PERCENT $CE_VOLUME_SPACE_GUARANTEE $CE_SSPOLICY_DEVOPS_USER 
+                 $CE_SSRESERVE_PERCENT $CE_VOLUME_SPACE_GUARANTEE $CE_SSPOLICY_DEVOPS_USER 
 		 $CE_POLICY_EXPORT $CE_ATIME_UPDATE $CE_UNIX_PERMISSIONS
                  $CE_CMD_FIND $CE_CMD_XARGS 
                  $CE_P4PORT $CE_CMD_P4 );

@@ -147,15 +147,17 @@ my $helpTxt = qq[
 $progname: Usage Information 
       -h|-help                        : show this help info
 
-      -vol|-volume   <volume name>    : volume name 
+      -vol|-volume   <volume name>    : source voj3j0
                                         default value is set in the CeInit.pm file
 				        by var \$CeInit::CE_DEFAULT_VOLUME_NAME
 
-      -s|-snapshot <snapshot name>    : volume name 
+      -s|-snapshot <snapshot name>    : name of the snapshot to create 
 
       -r|-remove                      : remove snapshot
 
       -v|-verbose                     : enable verbose output
+
+      -t|-test                        : test connection to filer then exit
 
       Examples:
 	create a snapshot for volume ce_test_vol
@@ -225,18 +227,18 @@ sub snapshot_delete {
     # delete snapshot
     #--------------------------------------- 
     $out = $naserver->invoke("snapshot-delete", "volume",   $volume, 
-                                                "snapshot", $snapshot_delete);
+                                                "snapshot", $snapshot_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to delete snapshot $volume \n";
+        print "ERROR ($progname): Unable to delete snapshot $snapshot_name \n";
         print "ERROR ($progname): snapshot-delete returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully deleted snapshot <$snapshot_delete>\n";
+    print "INFO ($progname): Successfully deleted snapshot <$snapshot_snapshot_name>\n";
 
 
 } # end of sub snapshot_delete()

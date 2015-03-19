@@ -180,6 +180,8 @@ $progname: Usage Information
 
       -v|-verbose                    : enable verbose output
 
+      -t|-test                       : test connection to filer then exit
+
       Examples:
 	create a FlexClone with the name <ce_test_vol>
 	starting with snapshot
@@ -230,7 +232,9 @@ sub clone_create {
     # create user path directory
     if ( system ("/bin/mkdir -p $UNIX_mount_dir") == 0) {
 	print "ERROR ($progname): Could not create user workspace.\n" .
-	      "      $UNIX_mount_dir\n";
+	      "      $UNIX_mount_dir\n" .
+	      "Exiting...\n";
+	exit 1;
     }
     print "INFO  ($progname): FleClone volume will be mounted at $UNIX_mount_dir\n";
 
