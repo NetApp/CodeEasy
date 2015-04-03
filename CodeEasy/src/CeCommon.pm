@@ -45,7 +45,7 @@ use NaElement;
 # load CodeEasy packages
 #---------------------------------------- 
 use lib "$FindBin::Bin/.";
-use CeInit;
+use CeInit;                   # found in the file CeInit.pm
 
 
 
@@ -62,30 +62,53 @@ sub init_filer {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
+    print "\nINFO  ($main::progname): Connecting to storage controler/vserver\n";
+
+    # Creates a new object of NaServer class and sets the default value for the following object members:
+    #   syntax: new($server, $majorversion, $minorversion)
+    print "\tstorage controler  = $CeInit::CE_CLUSTER_PORT\n";
     my $naserver = NaServer->new($CeInit::CE_CLUSTER_PORT, 1, 1);
 
-    #$naserver->set_admin_user("vsadmin", "devops123");
-    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
-    $naserver->set_transport_type("HTTP");
-    if ($CeInit::CE_DEFAULT_VSERVER) {
-        printf "INFO  ($main::progname): %-16s=> %s\n", "vserver", $CeInit::CE_DEFAULT_VSERVER;
-        $naserver->set_vserver($CeInit::CE_DEFAULT_VSERVER);
-    }
+    # sets the name of the Storage Virtual Machine (SVM, formerly known as Vserver) 
+    # to which a Cluster API need to be tunneled from a Cluster Management Interface.
+    print "\tset_vserver        = $CeInit::CE_DEFAULT_VSERVER\n";
+    $naserver->set_vserver($CeInit::CE_DEFAULT_VSERVER);
 
+    # set API transport type - HTTP is the default
+    print "\tset_transport_type = HTTP\n";
+    $naserver->set_transport_type("HTTP");
+
+    # pass username/password for vserver ontapi application access
+    #     $naserver->set_admin_user("vsadmin", "devops123");
+    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
+
+    # check connection to the filer by requesting a simple ontapi version status
     $out =  $naserver->invoke("system-get-version");
 
-    # check error status and exit if basic communication with the file can't be estabilished.
+    # check error status and exit if basic communication with the filer can't be estabilished.
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($main::progname): FAIL: Unable to obtain $CeInit::CE_CLUSTER_PORT version\n";
+        print "ERROR ($main::progname): FAIL: Unable to connect to $CeInit::CE_CLUSTER_PORT \n";
         print "ERROR ($main::progname): system-get-version returned with $errno and reason: " . 
 	                          '"' .  $out->results_reason() . "\n";
         print "ERROR ($main::progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($main::progname): Filer <$CeInit::CE_CLUSTER_PORT> is running cDOT version\n" .  
-                $out->child_get_string("version") . " \n";
+    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running ONTAP API version:\n" . 
+          "      " . $out->child_get_string("version") . " \n\n";
+      
 
+    # check that filer is running cDOT and not 7-mode
+    if ( $out->child_get_string("is-clustered") eq "true") {
+	print "\nDEBUG ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running cDOT.\n\n" if ($main::verbose);
+    } else {
+	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running in 7-mode\n" .
+	        "       These scripts support cDOT (Clustered Data OnTap) only\n" .
+	        "Exiting...\n";
+	exit 1;
+    }
+
+    # return to calling program
     return $naserver;
 
 } # end of init_filer()
@@ -97,4 +120,20 @@ sub init_filer {
 # So don't remove...
 1;
 
-
+############################################################
+# NaServer::new
+############################################################
+# Prototype
+#   new($server, $majorversion, $minorversion)
+#
+# Description
+#   Creates a new object of NaServer class and sets the default value for the following object members:
+#
+#   $user= root
+#   $password= ""
+#   $style= LOGIN
+#   $port= 80
+#   $transport_type= HTTP
+#   $servertype= FILER
+#
+# You can overwrite the default values by using the set Core APIs.

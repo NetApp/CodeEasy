@@ -79,7 +79,7 @@ exit 0    if (defined $test_only);
 #--------------------------------------- 
 # exit program successfully
 #--------------------------------------- 
-print "$progname exited successfully.\n\n";
+print "\n$progname exited successfully.\n\n";
 exit 0;
 
 
@@ -109,7 +109,7 @@ sub parse_cmd_line {
 
 
     # check if volume name was passed on the command line
-    if (! defined $volume ) {
+    if (defined $volume ) {
 	# command line volume name 
 
     } elsif ( defined  $CeInit::CE_DEFAULT_VOLUME_NAME ){
@@ -187,6 +187,11 @@ sub snapshot_create {
     my $out;
     my $errno;
 
+    my $UNIX_path     = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/$volume";
+    print "INFO  ($progname): Creating snapshot for volume <$volume>\n" .
+          "      snapshot name = $snapshot_name\n" .
+	  "      UNIX path     = $UNIX_path/.snapshot/$snapshot_name\n";
+
     #--------------------------------------- 
     # create snapshot
     #--------------------------------------- 
@@ -202,7 +207,7 @@ sub snapshot_create {
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully created snapshot <$snapshot_name>\n";
+    print "\nINFO  ($progname): Snapshot <$snapshot_name> successfully created.\n";
 
 
 } # end of sub snapshot_create()
@@ -223,6 +228,9 @@ sub snapshot_delete {
     my $out;
     my $errno;
 
+    print "INFO  ($progname): Deleting snapshot for volume <$volume>\n" .
+          "      snapshot name = $snapshot_name\n";
+
     #--------------------------------------- 
     # delete snapshot
     #--------------------------------------- 
@@ -238,7 +246,7 @@ sub snapshot_delete {
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully deleted snapshot <$snapshot_snapshot_name>\n";
+    print "\nINFO  ($progname): Snapshot <$snapshot_name> successfully deleted.\n";
 
 
 } # end of sub snapshot_delete()

@@ -81,7 +81,7 @@ exit 0    if (defined $test_only);
 #--------------------------------------- 
 # exit program successfully
 #--------------------------------------- 
-print "$progname exited successfully.\n\n";
+print "\n$progname exited successfully.\n\n";
 exit 0;
 
 
@@ -109,7 +109,7 @@ sub parse_cmd_line {
 
 
     # check if volume name was passed on the command line
-    if (! defined $volume ) {
+    if ( defined $volume ) {
 	# command line volume name 
 
     } elsif ( defined  $CeInit::CE_DEFAULT_VOLUME_NAME ){
@@ -132,7 +132,7 @@ sub parse_cmd_line {
 ########################################
 sub CMDParseError {
     # report cmd line parsing errors, display help then exit
-    print "\nERROR: Unrecognized command line option.\n" .
+    print "\nERROR ($progname): Unrecognized command line option.\n" .
           "       use the -help option to get program usage help.\n\n"; 
     exit 1;
 } # end sub &CMDParseError()
@@ -199,32 +199,25 @@ sub create_volume {
     # put the new volume at the end of the pre-mounted root directory
     # this will make it so the new volume will automatically be mounted
 
-    # NOTE: volumes will be created by the DEAMON, so they will be mounted to the
-    # CE_DAEMON_ROOT vs the CE_USER_ROOT
+    # NOTE: volumes will be created by the common build user 'MASTER', so they will be mounted to the
+    # CE_UNIX_MASTER_VOLUME_PATH vs the user path CE_UNIX_USER_FLEXCLONE_PATH
 
-    #my $junction_path = "$CeInit::CE_DAEMON_ROOT/$volume";
-    my $junction_path = "$CeInit::CE_MOUNT_DAEMON_ROOT/$volume";
-    print "DEBUG: junction path = $junction_path \n";
+    my $junction_path = "$CeInit::CE_JUNCT_PATH_MASTER/$volume";
+    my $UNIX_path     = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/$volume";
+    print "INFO  ($progname): Creating new volume\n" .
+          "      volume        = $volume\n" .
+	  "      junction path = $junction_path \n" .
+	  "      UNIX path     = $UNIX_path\n";
 
-
-    my $user_id  = getpwnam($CeInit::CE_DEVOPS_USER); 
-    my $group_id = getpwnam($CeInit::CE_GROUP); 
-    print "DEBUG: USER  = $CeInit::CE_DEVOPS_USER  UID = $user_id \n";
-    print "DEBUG: GROUP = $CeInit::CE_GROUP  GID = $group_id \n";
 
     #--------------------------------------- 
     # create volume
     #--------------------------------------- 
     $out = $naserver->invoke("volume-create", "volume",               $volume, 
 					      "junction-path",        $junction_path,
-                                              "containing-aggr-name", $CeInit::CE_AGGR, 
-                                              "size",                 $CeInit::CE_DAEMON_VOL_SIZE, 
-                                              "unix-permissions",     $CeInit::CE_UNIX_PERMISSIONS, 
-                                              "export-policy",        $CeInit::CE_POLICY_EXPORT, 
-                                              "snapshot-policy",      $CeInit::CE_SSPOLICY_DEVOPS_USER, 
-                                              "user-id",              $user_id, 
-                                              "group-id",             $group_id,
-                                              "space-reserve",        "none");
+                                              @CeInit::CE_VOLUME_CREATE_REQUIRED,
+                                              @CeInit::CE_VOLUME_CREATE_OPTIONS
+					      );
 
     # check status of the volume creation
     $errno = $out->results_errno();
@@ -235,7 +228,7 @@ sub create_volume {
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully created volume <$volume>\n";
+    print "\nINFO  ($progname): Volume: <$volume> successfully created.\n";
 
 } # end of sub create_volume()
 
@@ -265,7 +258,7 @@ sub remove_volume {
         #print "ERROR ($progname): Exiting with error.\n";
         #exit 1;
     }
-    print "INFO ($progname): Successfully unmounted volume <$volume>\n";
+    print "INFO  ($progname): Volume <$volume> successfully unmounted \n";
 
     #--------------------------------------- 
     # 2nd make sure the volume is offline
@@ -281,7 +274,7 @@ sub remove_volume {
         #print "ERROR ($progname): Exiting with error.\n";
         #exit 1;
     }
-    print "INFO ($progname): Successfully took volume <$volume> offline\n";
+    print "INFO  ($progname): Volume <$volume> successfully taken offline.\n";
 
     #--------------------------------------- 
     # 3rd remove/delete volume
@@ -297,7 +290,7 @@ sub remove_volume {
         print "ERROR ($progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO ($progname): Successfully removed volume <$volume>\n";
+    print "INFO  ($progname): Volume <$volume> successfully removed.\n";
 
 } # end of sub remove_volume()
 
