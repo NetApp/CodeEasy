@@ -335,11 +335,9 @@ sub clone_create {
 
 ###################################################################################
 # chown_clone:    change the ownership of the flexclone
-#   $volume:          The volume that contains the snapshot
-#   $snapshot:        name of the parent snapshot to clone
-#   $clone:           name of the new clone to create
 ###################################################################################
 sub chown_clone {
+
 
 } # end of sub &chown_clone();
 
@@ -413,6 +411,57 @@ sub remove_volume {
 ###################################################################################   
 sub list_snapshots {
 
+    my $snap_cnt      = 0;
+    my $snap_skip_cnt = 0;
+
+
+    # the snapshots can be found in the master directory
+    my $snap_dir = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/";
+    my $cmd      = "ls $snap_dir";
+
+    # execute cmd and capture the stdout/stderr to $cmd_out
+    my $cmd_out = `$cmd`;
+
+    # check status of the system call
+    if ($? == 0) {
+
+    }  else {
+	print "ERROR: Could not find snapshot directories.\n" .
+	      "       $cmd\n" .
+	      "Exiting...\n";
+	exit 1;
+    }
+    chomp $cmd_out;
+    print "\nINFO  ($progname): Snapshot list for volume <$volume>\n";
+
+    # loop thru list of snapshot directories 
+    foreach my $snap (sort split /^/, $cmd_out) {
+
+	# trip special characters off string
+        chomp $snap;
+
+	# skip regular snapshot - so only specifically named snapshots are shown
+	if ( ($snap =~ /^hourly/) || ($snap =~ /^daily/) || ($snap =~ /^weekly/) ) {
+	    $snap_skip_cnt++;
+	    next;
+	}
+
+	# remaining snapshot
+	print "\t$snap\n";
+
+	# keep track of snapshot count
+	$snap_cnt++;
+    }
+
+    # report nice message if not snapshot directories found
+    if ($snap_cnt ==0 ) {
+	print "\n      No snapshots found at $snap_dir\n";
+	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
+    }
+
+    # exit program successfully
+    print "\n$progname exited successfully.\n\n";
+    exit 0;
 
 
 } # end of sub &list_flexclones()
