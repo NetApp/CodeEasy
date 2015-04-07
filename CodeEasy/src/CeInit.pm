@@ -13,25 +13,28 @@ package CeInit;
 ########################################
     # UNIX path where master volume is mounted 
     #      this is volume which will be snapshot and flexcloned.
-    our $CE_UNIX_MASTER_VOLUME_PATH  = "/x/eng/devops/master";
+#   our $CE_UNIX_MASTER_VOLUME_PATH  = "/x/eng/devops/master";
     our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/mj_perforce/mnt/daemon";
 
     # USER FlexClones will be stored at 
     #    /x/eng/<site>/users/<username>/<flexclone> 
     #    the CeCreateFlexClone.pl will automatically add the <username> to the
     #    path - the filer junction path will automatically mount this location
-    our $CE_UNIX_USER_FLEXCLONE_PATH = "/x/eng/devops/users";     
+#   our $CE_UNIX_USER_FLEXCLONE_PATH = "/x/eng/devops/users";     
     our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/mj_perforce/mnt/users";
 
 
 ########################################
 # NetApp Storage Config Info  
 ########################################
-    # NetApp filer access usr/pass pair
-    # admin permissions to access filer - used as part of volume creation process
-    #   Example:    $naserver->set_admin_user("vsadmin", "devops123");
-    # IMPORTANT: the user who has ontapi application access
+    # NetApp vserver admin access usr/pass pair
+    # admin permissions to access filer 
+    # IMPORTANT: the vserver admin must have 'ontapi' application access
     #            this login access to the vserver and not to the cluster.
+    #            Check permission access
+    #            cluster> security login show
+    #
+    #   SDK API Example:  $naserver->set_admin_user("vsadmin", "devops123");
     our @CE_ADMIN_USER  = ("vsadmin","devops123");
 
     our $CE_CLUSTER_PORT    = "sv5-devops-01";   # management port 

@@ -2,9 +2,33 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
-CodeEasy_1.0.0-Alpha  (release date: 2015-02-xx)
+CodeEasy_1.0.1-Alpha  (release date: 2015-03-31)
 ----------------------------------------
-This is an initial release - no customer input yet.  Created for internal
-development purposes only.
-This release was tested using cDOT8.2.2
+    Second release after initial customer and internal testing.
+    - Added documentation associated with seting cDOT admin permissions.
+      Login username/password is associated with the vserver and requires ontapi
+      application access permissions to be set for the APIs used by the CodeEasy
+      scripts to access the filer.
+    - Cleaned up unused variables in the CEInit.pm file. Also restructured the
+      file to put the most important variables for creating the initial Snapshot
+      and FlexClone first. Setup for creating a volume is placed later with
+      additional text since most of the time the user will start with an existing
+      volume.  Some variables were renamed to improve easy of use.
+    - Add check for cDOT - if a 7-mode system is detected the script will
+      generate an ERROR and will exit.
+    - Fixed missing exit on mkdir in CeCreateFlexClone.pl.  If the junction path
+      does not have a corresponding UNIX path, then the script should FAIL with an
+      ERROR before attempting to create the FlexClone.
+    - CeFlexClone.pl changes
+	Added -ls option to show list of available snapshots.
+	Added -fc_volname option to allow flexclone volume name to be different than 
+	      the junction_path volume name seen by the user.  
+	      NOT WORKING IN THIS RELEASE
+
+
+CodeEasy_1.0.0-Alpha  (release date: 2015-03-05)
+----------------------------------------
+    This is an initial release - no customer input yet.  Created for internal
+    development purposes only.
+    This release was tested using cDOT8.2.2
 

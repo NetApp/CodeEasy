@@ -99,6 +99,8 @@ sub parse_cmd_line {
               'vol|volume=s'     => \$volume,            # volume to snapshot
 	      's|snapshot=s'     => \$snapshot_name,     # snapshot name
 
+	      'ls'                 => sub { &CeCommon::list_snapshots() }, # list available snapshots
+
 	      'r|remove'         => \$snapshot_delete,   # remove snapshot
 
 	      't|test_only'      => \$test_only,     # test filer connection then exit
@@ -152,6 +154,8 @@ $progname: Usage Information
 				        by var \$CeInit::CE_DEFAULT_VOLUME_NAME
 
       -s|-snapshot <snapshot name>    : name of the snapshot to create 
+
+      -ls                             : list snapshots (exludes hourly, daily and weekly snapshots)
 
       -r|-remove                      : remove snapshot
 

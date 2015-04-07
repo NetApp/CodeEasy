@@ -71,6 +71,11 @@ exit 0    if (defined $test_only);
 
 
 #--------------------------------------- 
+# List Volumes - then exit
+#--------------------------------------- 
+&list_flexclones() if ($list_flexclones);
+
+#--------------------------------------- 
 # create flexclone
 #    flexclone volume is created by default - unless -remove is specified
 #--------------------------------------- 
@@ -111,7 +116,7 @@ sub parse_cmd_line {
 
 	      'r|remove'           => \$volume_delete,           # remove clone volume
 
-	      'ls'                 => sub { &list_snapshots() }, # list available snapshots
+	      'ls'                 => sub { &CeCommon::list_snapshots() }, # list available snapshots
 	      'lc'                 => sub { &list_flexclones()}, # list current flexclone volumes
 
 	      't|test'             => \$test_only,               # test filer connection then exit
@@ -207,7 +212,8 @@ $progname: Usage Information
 
       -r|-remove                     : remove volume
 
-      -ls                            : list available snapshots
+      -ls                            : list snapshots (exludes hourly, daily and weekly snapshots)
+
       -lc                            : list current flexclones
 
       -v|-verbose                    : enable verbose output
@@ -406,67 +412,6 @@ sub remove_volume {
 
 } # end of sub remove_volume()
 
-###################################################################################
-# list current list of snapshots
-###################################################################################   
-sub list_snapshots {
-
-    my $snap_cnt      = 0;
-    my $snap_skip_cnt = 0;
-
-
-    # the snapshots can be found in the master directory
-    my $snap_dir = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/";
-    my $cmd      = "ls $snap_dir";
-
-    # execute cmd and capture the stdout/stderr to $cmd_out
-    my $cmd_out = `$cmd`;
-
-    # check status of the system call
-    if ($? == 0) {
-
-    }  else {
-	print "ERROR: Could not find snapshot directories.\n" .
-	      "       $cmd\n" .
-	      "Exiting...\n";
-	exit 1;
-    }
-    chomp $cmd_out;
-    print "\nINFO  ($progname): Snapshot list for volume <$volume>\n";
-
-    # loop thru list of snapshot directories 
-    foreach my $snap (sort split /^/, $cmd_out) {
-
-	# trip special characters off string
-        chomp $snap;
-
-	# skip regular snapshot - so only specifically named snapshots are shown
-	if ( ($snap =~ /^hourly/) || ($snap =~ /^daily/) || ($snap =~ /^weekly/) ) {
-	    $snap_skip_cnt++;
-	    next;
-	}
-
-	# remaining snapshot
-	print "\t$snap\n";
-
-	# keep track of snapshot count
-	$snap_cnt++;
-    }
-
-    # report nice message if not snapshot directories found
-    if ($snap_cnt ==0 ) {
-	print "\n      No snapshots found at $snap_dir\n";
-	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
-    }
-
-    # exit program successfully
-    print "\n$progname exited successfully.\n\n";
-    exit 0;
-
-
-} # end of sub &list_flexclones()
-
-
 
 
 ###################################################################################
@@ -474,7 +419,41 @@ sub list_snapshots {
 ###################################################################################   
 sub list_flexclones {
 
+    #--------------------------------------- 
+    # initialize access to NetApp filer
+    #--------------------------------------- 
+    my $naserver = &CeCommon::init_filer();
 
+    my $api_cmd = "volume-clone-get-iter";
+
+    my $out = $naserver->invoke($api_cmd);
+
+    # check status of the invoked command
+    my $errno = $out->results_errno();
+    if ($errno) {
+        print "ERROR ($progname): while executing $api_cmd  \n";
+        print "ERROR ($progname): $api_cmd returned with $errno reason: " . 
+	                          '"' . $out->results_reason() . "\n";
+        print "ERROR ($progname): Exiting with error.\n";
+        exit 1;
+    } else {
+	print "$api_cmd successful\n";
+    }
+
+    my @result = $out->children_get();
+    my $volume_info = $out->child_get("volume-clone-info");
+    print "DEBUG: volume_info = <$volume_info>\n";
+    #my @result = $volume_info->children_get();
+
+    foreach my $vol (@result) {
+	my $vol_name = $vol->child_get_string("name");
+	print "Volume name: $vol_name \n";
+
+    }
+
+    # exit program successfully
+    print "\n$main::progname exited successfully.\n\n";
+    exit 0;
 
 } # end of sub &list_flexclones()
 

@@ -30,6 +30,49 @@
     kit.  This can be change by editing the .pl script if a different location
     is desired.
 
+    NOTE: If the SDK is installed in a different location, edit the path in
+    the CeCommon.pm file to use the correct path.
+    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
+    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
+    
+
+
+****************************************
+  Setup and Test CodeEasy Script
+****************************************
+
+    ----------------------------------------
+    Edit CeInit.pm
+    ----------------------------------------
+    Open and edit the file CeInit.pm
+
+    The CeInit.pm file contains all the default values for UNIX and vserver
+    setup.  The file is well commented, so read thru the file and edit each
+    line as required to localize the script to your environment. 
+
+    Review vserver admin doc: Configuring your storage system in a cluster environment
+    https://library.netapp.com/ecmdocs/ECMP1200040/html/GUID-A49C52A4-0E67-47C6-96A7-F8BBC055971E.html 
+
+    The NetApp manageability SDK access will NOT work without 'ontapi'
+    application permissions set for the vserver admin user.
+    Check vserver security settings
+    cluster> security login show
+
+    ----------------------------------------
+    Test the CodeEasy Scripts 
+    ----------------------------------------
+    The CeCreateVolume.pl, CeCreateSnapshot.pl and CeCreateFlexclone.pl
+    scripts all have a -test|-t option which should be used to check basic
+    connectivity to the vserver
+
+    Example:
+    %> ./CeCreateSnapshot -test
+	INFO  (CeCreateSnapshot.pl): Connecting to storage controler/vserver
+		storage controler  = sv5-devops-01
+		set_vserver        = sv5-devops-01
+		set_transport_type = HTTP
+	INFO  (CeCreateSnapshot.pl): Storage Controller <sv5-devops-01> is running ONTAP API version:
+	      NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
 
 
 ****************************************
@@ -45,13 +88,18 @@
     ----------------------------------------
 
     Step #1A: Mount Junction Path
+	      New volumes and flexclones will use junction paths relative to
+	      this mount point. 
+	
+	%> sudo mount -t nfs <vserver>:<filer path>      <UNIX mount point>
+
 	%> sudo mount -t nfs sv5-devops-01:/share/devops /home/ubuntu/mj_perforce/mnt
 
 
     Step #1B: Compile sur and fast_chown scripts
 	This step requires sudo previleges - which in this case user 'devops' has
 	sudu permissions setup to perform various operations - which needs to be
-	detailed (TBD).
+	detailed (TBD). These scripts can also be compiled as root if needed.
 
 	%> cd <CodeEasy dir>/src
 	%> make all
@@ -65,7 +113,7 @@
     Continuous Integration Flow Steps
     ----------------------------------------
 
-    Step #2: Create new volume 
+    Step #2: Create new volume (*** SKIP THIS STEP IF YOUR VOLUME ALREADY EXISTS ***)
 	%> ./CeCreateVolume.pl -vol ce_test_volume
 
 	This will create a volume which is automatically mounted at /home/mj_perforce/mnt/daemon/ce_test_daemon
@@ -75,9 +123,9 @@
 	NOTE: the default volume name can be set in the CeInit.pm file 
 	      look for the variable $CE_DEFAULT_VOLUME_NAME 
 
-    Step #3: Populate the test volume with stuff 
+    Step #3: Populate the test volume with project data
 	This of course will be a Perforce or GiT checkout of some sort.  For the
-	purposes of this initial testing without a RCS tool, we will just copy a
+	purposes of this initial testing without a RCS tool, we can just copy a
 	bunch of files - of significant size - to the new volume.
 
 	%> cp -R /home/ubuntu/mj_perforce/pf_evalkit/netapp-manageability-sdk-5.2.2 /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/
@@ -95,6 +143,8 @@
 	%> ./CeCreateSnapshot.pl -vol ce_test_volume -snapshot ce_test_snap_01
 
 	There should now be a new snapshot at /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/.snapshot/ce_test_snap_01
+
+	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
 
 
 
@@ -114,6 +164,8 @@
 	Note that the permissions at this point on the files and directories are
 	the same as that of the Snapshot from which it came.
 
+	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
+
     Step #7: Change ownership of the FlexClone volume to that of the current user
 
 	%> ./sur ./CeChownList.pl devops -d /home/ubuntu/mj_perforce/mnt/users/ce_test_snap_01_clone -u ubuntu
@@ -126,9 +178,18 @@
 	nothing to do.  
 
 	Perforce - post FlexClone command
-	%> p4 client
-	%> p4 flush
-	--> You are all set and ready to develop as normal
+	    %> p4 client
+	    %> p4 flush
+	    --> You are all set and ready to develop as normal
+
+	GIT or SubVersion (SVN)
+	    You don't need to do anything.
+	    --> You are all set and ready to develop as normal
+
+	CVS
+	    Modify the CVS/Root files recursively thru the volume to change username
+	    %> find . name Root -type f | xargs -P 140 perl -pi -e 's/old_user/new_user/g'
+	    --> You are all set and ready to develop as normal
 
 
 

@@ -36,6 +36,7 @@ use strict;        # require strict programming rules
 # SDK setenv not set, assume the SDK is in parallel to the CodeEasy
 # tarball installation    ***** CUSTOMIZE ME *****
 use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
+# use lib "<your_full_path>/netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
 
 # load the NetApp Manageability SDK components
 use NaServer;      
@@ -114,11 +115,86 @@ sub init_filer {
 } # end of init_filer()
 
 
+###################################################################################
+# list current list of snapshots
+###################################################################################   
+sub list_snapshots {
+
+    my $snap_cnt      = 0;
+    my $snap_skip_cnt = 0;
+
+
+    # the snapshots can be found in the master directory
+    my $snap_dir = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/";
+
+    # check that the snapshot directory exists
+    if (! -d $snap_dir) {
+	print "\nERROR ($main::progname) The master volume Snapshot directory not found!\n" .
+	        "      $snap_dir\n\n" .
+		"      Check the \$CE_UNIX_MASTER_VOLUME_PATH/.snapshot/ setting in CeInit.pm\n" .
+	        "Exiting...\n\n";
+	exit 1;
+    }
+
+
+    my $cmd      = "ls $snap_dir";
+
+    # execute cmd and capture the stdout/stderr to $cmd_out
+    my $cmd_out = `$cmd`;
+
+    # check status of the system call
+    if ($? == 0) {
+
+    }  else {
+	print "ERROR: Could not find snapshot directories.\n" .
+	      "       $cmd\n" .
+	      "Exiting...\n";
+	exit 1;
+    }
+    chomp $cmd_out;
+    print "\nINFO  ($main::progname): Snapshot list for volume <$main::volume>\n";
+
+    # loop thru list of snapshot directories 
+    foreach my $snap (sort split /^/, $cmd_out) {
+
+	# trip special characters off string
+        chomp $snap;
+
+	# skip regular snapshot - so only specifically named snapshots are shown
+	if ( ($snap =~ /^hourly/) || ($snap =~ /^daily/) || ($snap =~ /^weekly/) ) {
+	    $snap_skip_cnt++;
+	    next;
+	}
+
+	# remaining snapshot
+	print "\t$snap\n";
+
+	# keep track of snapshot count
+	$snap_cnt++;
+    }
+
+    # report nice message if not snapshot directories found
+    if ($snap_cnt ==0 ) {
+	print "\n      No snapshots found at $snap_dir\n";
+	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
+    }
+
+    # exit program successfully
+    print "\n$main::progname exited successfully.\n\n";
+    exit 0;
+
+
+} # end of sub &list_snapshots()
+
+
+
 
 
 # ALL PERL PACKAGES (.pm files) must end with '1;'  
 # So don't remove...
 1;
+
+
 
 ############################################################
 # NaServer::new

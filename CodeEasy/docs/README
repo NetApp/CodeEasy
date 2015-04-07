@@ -10,17 +10,31 @@ Installation Instructions
 2. Download the NetApp Manageability SDK 5.2.2 from the support.netapp.com site
    netapp-manageability-sdk-5.2.2
 
-3. Build the 'sur' code on the UNIX platform you will use
-   %> cd <CodeEasy tarball dir>/src
-   %> make
-   This will build a file called 'sur'
-
-4. 
+4. Follow the instructions in the QUICKSTART guide (found in this tarball) 
 
 
-
-Setup and Customization Help
+Compatability Requirements
 ----------------------------------------
+cDOT
+    cDOT is a requirement for the current CodeEasy implementation. The code
+    assumes the use of junction_paths and vservers which are not available in
+    7-mode.
 
+    cDOT version 8.1 or later should work fine.  Development testing was done on
+    a cDOT 8.2.2.
+
+Manageability-SDK
+    The 5.2.2 version of the NetApp Manageability-SDK release notes say the following;
+
+    - To use the Data ONTAP management APIs, storage systems should be running Data ONTAP 6.3 or later.
+    - OS Requirements
+         Red Hat Linux (32-bit and 64-bit): V5, V6
+         Oracle Enterprise Linux: 4.0, 4.8, 5.4, 5.5, 5.6, 5.7, 5.8, 6.0, 6.1, 6.2, 6.3
+         SUSE Linux (32-bit and 64-bit): 10.0, 11.0
+    - Perl 5.8, 5.10, and 5.16
+
+    NOTE: development testing was done using;
+      Red Hat Enterprise Linux Server release 6.4 (Santiago)
+      Perl v5.8.8
 
 
