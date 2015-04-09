@@ -152,7 +152,7 @@ sub list_snapshots {
 	exit 1;
     }
     chomp $cmd_out;
-    print "\nINFO  ($main::progname): Snapshot list for volume <$main::volume>\n";
+    print "\nINFO  ($main::progname): Snapshot list for volume <$CeInit::CE_DEFAULT_VOLUME_NAME>\n";
 
     # loop thru list of snapshot directories 
     foreach my $snap (sort split /^/, $cmd_out) {

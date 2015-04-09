@@ -50,6 +50,7 @@ our $volume_delete;                # cmdline arg: remove flexclone volume
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
+my $MAX_RECORDS = 200;
 
 ############################################################
 # Start Program
@@ -413,7 +414,6 @@ sub remove_volume {
 } # end of sub remove_volume()
 
 
-
 ###################################################################################
 # list current list of flexclones
 ###################################################################################   
@@ -424,32 +424,79 @@ sub list_flexclones {
     #--------------------------------------- 
     my $naserver = &CeCommon::init_filer();
 
-    my $api_cmd = "volume-clone-get-iter";
+    my %junction_path_map;
+    my %vol_usage_map;
+    my %vol_dedup_saved;
+    my %vol_dedup_shared;
 
-    my $out = $naserver->invoke($api_cmd);
+    my @vlist = vGetcDOTList( $naserver, "volume-get-iter" );
 
-    # check status of the invoked command
-    my $errno = $out->results_errno();
-    if ($errno) {
-        print "ERROR ($progname): while executing $api_cmd  \n";
-        print "ERROR ($progname): $api_cmd returned with $errno reason: " . 
-	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
-        exit 1;
-    } else {
-	print "$api_cmd successful\n";
+    foreach my $tattr ( @vlist ) {
+	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
+	my $volume_name;
+	if ( $vol_id_attrs ) {
+	    $volume_name = $vol_id_attrs->child_get_string( "name" );
+	    my $jpath = $vol_id_attrs->child_get_string( "junction-path" );
+	    $junction_path_map{$volume_name} = $jpath;
+	    print "DEBUG: Volume: $volume_name \tJunction Path: $jpath \n" if ($verbose);
+	}
+	my $vol_space_attrs = $tattr->child_get( "volume-space-attributes" );
+	if ( $vol_space_attrs ) {
+	    my $vol_usage = $vol_space_attrs->child_get_string( "size-used" );
+	    if (defined $vol_usage) {
+		$vol_usage_map{$volume_name} = $vol_usage;
+		#print "DEBUG: vol usage: $volume_name $vol_usage_map{$volume_name}\n";
+	    }
+	}
+	my $vol_sis_attrs = $tattr->child_get( "volume-sis-attributes" );
+	#printf($vol_sis_attrs->sprintf());
+	if ( $vol_sis_attrs ) {
+	    my $dedup_saved  = $vol_sis_attrs->child_get_string( "percentage-total-space-saved" );
+	    my $dedup_shared = $vol_sis_attrs->child_get_string( "deduplication-space-shared" );
+	    if (defined $dedup_saved) {
+		$vol_dedup_saved{$volume_name}  = $dedup_saved;
+		$vol_dedup_shared{$volume_name} = $dedup_shared;
+		print "DEBUG: dedup saved: $volume_name saved=$vol_dedup_saved{$volume_name}  shared=$vol_dedup_shared{$volume_name}\n" if ($verbose);
+	    }
+	}
     }
 
-    my @result = $out->children_get();
-    my $volume_info = $out->child_get("volume-clone-info");
-    print "DEBUG: volume_info = <$volume_info>\n";
-    #my @result = $volume_info->children_get();
+    # get volume clone info iteratively - it will return a list
+    @vlist = vGetcDOTList( $naserver, "volume-clone-get-iter" );
 
-    foreach my $vol (@result) {
-	my $vol_name = $vol->child_get_string("name");
-	print "Volume name: $vol_name \n";
+    print "\nList FlexClones\n";
+	    #123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 
+    printf  "%-20s %-30s %-30s %15s %s \n", "Parent Volume", "FlexClone", "Parent-Snapshot", "Data Used (MB)  ", "Junction-path";
+    print   "------------------------------------------------------------------------------------------------------------------------\n"; 
 
+    # for each clone entry
+    foreach my $vol_data ( @vlist ) {
+    #printf($vol_data->sprintf());
+	    my $volume_name = $vol_data->child_get_string( "parent-volume"  );
+	    my $clone_name  = $vol_data->child_get_string( "volume"         );
+	    my $snapshot    = $vol_data->child_get_string( "parent-snapshot");
+	    my $used        = $vol_data->child_get_string( "used"           );
+	    # represent data used in MB
+	    $used = $used/(10**6);
+
+	    # determine juction-path info
+	    my $jpath       = $vol_data->child_get_string( "junction-path"  );
+	    # test if the value returned correctly
+	    if ( defined $jpath ) {
+		# perfect the look up worked correctly
+	    } elsif ( defined $junction_path_map{$clone_name} ) {
+		# ok lookup didn't work, but it was found by method #2
+		$jpath = $junction_path_map{$clone_name};
+	    } else {
+		# no junction path found
+		$jpath = "Not Mounted"; 
+	    }
+
+	    # print results
+	    print "vol usage: $volume_name $vol_usage_map{$volume_name}\n";
+	    printf "%-20s %-30s %-30s %11.2f MB   %s \n" , $volume_name, $clone_name, $snapshot, $used, $jpath;
     }
+
 
     # exit program successfully
     print "\n$main::progname exited successfully.\n\n";
@@ -457,5 +504,65 @@ sub list_flexclones {
 
 } # end of sub &list_flexclones()
 
+#
+# Name: vGetcDOTList()
+# Func: Note that Perl is a lot more forgiving with long object lists than ONTAP is.  As a result,
+#	  we have the luxury of returning the entire set of objects back to the caller.  Get all the
+#	  objects rather than waiting.
+#
+sub vGetcDOTList {
+    my ( $zapiServer, $zapiCall, @optArray ) = @_;
+    my @list;
+    my $done = 0;
+    my $tag  = 0;
+    my $zapi_results;
 
+    # loop thru calling the command until all tags are processed
+    while ( !$done ) {
+
+	print "Attempting to collect " . ( $tag ? "more " : "" ) . "API results for $zapiCall from vserver ...\n" if ($verbose);
+
+	# if a tag exists, pass it to the zapi command
+	if ( $tag ) {
+	    if ( @optArray ) {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS, @optArray );
+	    } else {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS );
+	    }
+	} else {
+	    # not tag exists - probably the first time the command is called
+	    if ( @optArray ) {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS, @optArray );
+	    } else {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS );
+	    }
+	}
+
+	# check status of the call
+	if ( $zapi_results->results_status() eq "failed" ) {
+	    print "ERROR: ONTAP API call $zapiCall failed: " . $zapi_results->results_reason() . "\n";
+	    return( 0 );
+	}
+
+	# get next tag (if multiple queries are required to get large lists
+	$tag = $zapi_results->child_get_string( "next-tag" );
+
+	my $list_attrs = $zapi_results->child_get( "attributes-list" );
+	if ( $list_attrs ) {
+	    my @list_items = $list_attrs->children_get();
+	    if ( @list_items ) {
+		push( @list, @list_items );
+	    }
+	}
+
+	# if no tags are left, then exit the while loop
+	if ( !$tag ) {
+	    $done = 1;
+	}
+    }
+
+    # return list to calling sub
+    return( @list );
+
+} # end of sub vGetcDOTList()
 
