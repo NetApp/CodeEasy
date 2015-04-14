@@ -2,8 +2,38 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
-CodeEasy_1.0.1-Alpha  (release date: 2015-03-31)
+CodeEasy_1.0.3-Alpha  (release date: 2015-04-14)
 ----------------------------------------
+    Release for External Consumption
+
+    Update FlexClone report to show the following information.  The "FlexClone Act" or 
+    FlexClone Actual data usage shows the amount of storage actually consumed
+    by the FlexClone.  In one case the FlexClone is significantly different
+    than the original volume thus shows 52.57% of the original mj_vol size.  Where
+    as the other FlexClones use only 4.39% of the original volume size
+
+
+    List FlexClones
+    Parent Volume        Parent-Snapshot                FlexClone                          Parent Vol  FlexClone Vol      Split Est           FlexClone Act  Junction-path 
+    ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    mj_vol               mj_vol_snap_02                 mj_vol_snap02_clone                 445.83 MB      445.84 MB      426.32 MB       19.52 MB ( 4.38%)  /share/devops/users/ubuntu/mj_vol_snap02_clone
+    mj_vol               mj_vol_snap_02                 mj_vol_snap02_clone2                445.83 MB      891.27 MB      422.69 MB      468.58 MB (52.57%)  /share/devops/users/ubuntu/mj_vol_snap02_clone2
+    mj_vol               mj_vol_snap_03                 mj_vol_snap03_clone                 445.83 MB      445.84 MB      426.26 MB       19.58 MB ( 4.39%)  /share/devops/users/ubuntu/mj_vol_snap03_clone
+    mj_vol               mj_vol_snap_01                 mj_vol_snap_01_clone                445.83 MB      445.80 MB      426.23 MB       19.57 MB ( 4.39%)  /share/devops/users/ubuntu/mj_vol_snap_01_clone
+
+
+
+CodeEasy_1.0.2-Alpha  (release date: 2015-04-08)
+----------------------------------------
+    Release for internal NetApp use Only
+
+    Added working code to report FlexClone volumes.  The volume and junction
+    path information was reported correctly, but not the volume size info.
+
+CodeEasy_1.0.1-Alpha  (release date: 2015-04-06)
+----------------------------------------
+    Release for internal NetApp use Only
+
     Second release after initial customer and internal testing.
     - Added documentation associated with seting cDOT admin permissions.
       Login username/password is associated with the vserver and requires ontapi

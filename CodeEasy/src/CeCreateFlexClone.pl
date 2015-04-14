@@ -466,18 +466,39 @@ sub list_flexclones {
 
     print "\nList FlexClones\n";
 	    #123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 
-    printf  "%-20s %-30s %-30s %15s %s \n", "Parent Volume", "FlexClone", "Parent-Snapshot", "Data Used (MB)  ", "Junction-path";
-    print   "------------------------------------------------------------------------------------------------------------------------\n"; 
+    printf  "%-20s %-30s %-29s ", "Parent Volume", "Parent-Snapshot", "FlexClone";
+    printf  "%15s",               "Parent Vol";
+    printf  "%15s",               "FlexClone Vol";
+    printf  "%15s",               "Split Est";
+    printf  "%24s",               "FlexClone Act";
+    printf  "  %s \n",            "Junction-path";
+    print   "---------------------------------------------------------------------------------------" .
+            "---------------------------------------------------------------------------------------\n"; 
 
     # for each clone entry
     foreach my $vol_data ( @vlist ) {
     #printf($vol_data->sprintf());
-	    my $volume_name = $vol_data->child_get_string( "parent-volume"  );
-	    my $clone_name  = $vol_data->child_get_string( "volume"         );
-	    my $snapshot    = $vol_data->child_get_string( "parent-snapshot");
-	    my $used        = $vol_data->child_get_string( "used"           );
-	    # represent data used in MB
-	    $used = $used/(10**6);
+	    my $volume_name    = $vol_data->child_get_string( "parent-volume"  );
+	    my $clone_name     = $vol_data->child_get_string( "volume"         );
+	    my $snapshot       = $vol_data->child_get_string( "parent-snapshot");
+	    my $flexclone_used = $vol_data->child_get_string( "used"           );
+	    my $split_est      = $vol_data->child_get_string( "split-estimate" );
+
+	    # FlexClone volume: space used - represent data used in MB
+	    $flexclone_used    = $flexclone_used/1024/1024;
+
+	    # parent volume: space used - represent data used in MB
+	    my $parent_used = $vol_usage_map{$volume_name}/1024/1024;
+
+	    # split estimate value is returned in blocks rather than bytes
+	    $split_est      = $split_est*4096/1024/1024; # blocks => MiB
+
+	    # storage used by the FlexClone
+	    my $flexclone_actual = $flexclone_used - $split_est;
+
+	    # calculate % savings
+	    my $savings      = ($flexclone_actual/$flexclone_used)*100;
+	    my $compression  = (1-$flexclone_actual/$flexclone_used)*100;
 
 	    # determine juction-path info
 	    my $jpath       = $vol_data->child_get_string( "junction-path"  );
@@ -493,8 +514,14 @@ sub list_flexclones {
 	    }
 
 	    # print results
-	    print "vol usage: $volume_name $vol_usage_map{$volume_name}\n";
-	    printf "%-20s %-30s %-30s %11.2f MB   %s \n" , $volume_name, $clone_name, $snapshot, $used, $jpath;
+	    printf "%-20s %-30s %-30s ", $volume_name, $snapshot, $clone_name;
+	    printf "%11.2f MB ",         $parent_used;
+	    printf "%11.2f MB ",         $flexclone_used;
+	    printf "%11.2f MB ",         $split_est;
+	    printf "%11.2f MB",          $flexclone_actual;
+	    printf " (%5.2f",            $savings; print "%)";
+	    #printf " (%5.2f",           $compression; print "%)";
+	    printf "  %s\n",             $jpath;
     }
 
 
