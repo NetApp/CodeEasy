@@ -2,7 +2,14 @@
 # CodeEasy Setup File
 #    Basic Initialization Variables
 # 
-# This file should be customized for each project
+# This should be customized for each CodeEasy project.  This file is included
+# by all the other CodeEasy scripts like CeCreateFlexClone.pl.
+#
+# Long term, this file could be replaced by a project config (.cfg) or (.xml)
+# file whic contains the same information but in a loadable text format.  This
+# was not implemented because the file parsing just adds additional complexity
+# to this simple CodeEasy Eval Kit implementation.
+#
 ################################################################################
 
 # declair this file (.pm) as a Perl package
@@ -13,14 +20,12 @@ package CeInit;
 ########################################
     # UNIX path where master volume is mounted 
     #      this is volume which will be snapshot and flexcloned.
-#   our $CE_UNIX_MASTER_VOLUME_PATH  = "/x/eng/devops/master";
     our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/proj/viper/viper_nightly_builds";
 
     # USER FlexClones will be stored at 
     #    /x/eng/<site>/users/<username>/<flexclone> 
     #    the CeCreateFlexClone.pl will automatically add the <username> to the
     #    path - the filer junction path will automatically mount this location
-#   our $CE_UNIX_USER_FLEXCLONE_PATH = "/x/eng/devops/users";     
     our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/proj/viper/users";
 
 
