@@ -13,7 +13,17 @@
 # Author:  Michael Johnson (michael.johnson@netapp.com)
 #           
 #
-# Copyright 2015 NetApp
+# NETAPP CONFIDENTIAL
+# -------------------
+# Copyright 2015 NetApp, Inc. All Rights Reserved.
+#
+# NOTICE: All information contained herein is, and remains the property
+# of NetApp, Inc.  The intellectual and technical concepts contained
+# herein are proprietary to NetApp, Inc. and its suppliers, if applicable,
+# and may be covered by U.S. and Foreign Patents, patents in process, and are
+# protected by trade secret or copyright law. Dissemination of this
+# information or reproduction of this material is strictly forbidden unless
+# permission is obtained from NetApp, Inc.
 #
 ################################################################################
 

@@ -14,14 +14,14 @@ package CeInit;
     # UNIX path where master volume is mounted 
     #      this is volume which will be snapshot and flexcloned.
 #   our $CE_UNIX_MASTER_VOLUME_PATH  = "/x/eng/devops/master";
-    our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/mj_perforce/mnt/daemon";
+    our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/proj/viper/viper_nightly_builds";
 
     # USER FlexClones will be stored at 
     #    /x/eng/<site>/users/<username>/<flexclone> 
     #    the CeCreateFlexClone.pl will automatically add the <username> to the
     #    path - the filer junction path will automatically mount this location
 #   our $CE_UNIX_USER_FLEXCLONE_PATH = "/x/eng/devops/users";     
-    our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/mj_perforce/mnt/users";
+    our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/proj/viper/users";
 
 
 ########################################
@@ -42,17 +42,17 @@ package CeInit;
     our $CE_TRANSPORT_TYPE  = "HTML";            
 
     # default volume name - is the default used by CeCreateSnapshot and CeCreateFlexClone
-    our $CE_DEFAULT_VOLUME_NAME    = "ce_test_volume";
+    our $CE_DEFAULT_VOLUME_NAME    = "viper_nightly_builds";
 
 
     # Storage Mount Points
     # root of the junction path 
     # this should be mounted on the unix side, then all other flexclones are automatically mounted when created.
     #      sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
-    our $CE_JUNCT_PATH_ROOT        = "/share/devops";    
+    our $CE_JUNCT_PATH_ROOT        = "/proj/viper";    
 						    
     # location on the filer where MASTER volume and snapshots are stored
-    our $CE_JUNCT_PATH_MASTER      = "$CE_JUNCT_PATH_ROOT/daemon";
+    our $CE_JUNCT_PATH_MASTER      = "$CE_JUNCT_PATH_ROOT";
 
     # location on the filer where USERS FlexClone volumes are stored
     our $CE_JUNCT_PATH_USERS       = "$CE_JUNCT_PATH_ROOT/users";

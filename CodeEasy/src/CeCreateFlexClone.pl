@@ -14,7 +14,17 @@
 # Author:  Michael Johnson (michael.johnson@netapp.com)
 #           
 #
-# Copyright 2015 NetApp
+# NETAPP CONFIDENTIAL
+# -------------------
+# Copyright 2015 NetApp, Inc. All Rights Reserved.
+#
+# NOTICE: All information contained herein is, and remains the property
+# of NetApp, Inc.  The intellectual and technical concepts contained
+# herein are proprietary to NetApp, Inc. and its suppliers, if applicable,
+# and may be covered by U.S. and Foreign Patents, patents in process, and are
+# protected by trade secret or copyright law. Dissemination of this
+# information or reproduction of this material is strictly forbidden unless
+# permission is obtained from NetApp, Inc.
 #
 ################################################################################
 
@@ -466,7 +476,7 @@ sub list_flexclones {
 
     print "\nList FlexClones\n";
 	    #123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 
-    printf  "%-20s %-30s %-29s ", "Parent Volume", "Parent-Snapshot", "FlexClone";
+    printf  "%-25s %-30s %-29s ", "Parent Volume", "Parent-Snapshot", "FlexClone";
     printf  "%15s",               "Parent Vol";
     printf  "%15s",               "FlexClone Vol";
     printf  "%15s",               "Split Est";
@@ -484,14 +494,11 @@ sub list_flexclones {
 	    my $flexclone_used = $vol_data->child_get_string( "used"           );
 	    my $split_est      = $vol_data->child_get_string( "split-estimate" );
 
-	    # FlexClone volume: space used - represent data used in MB
-	    $flexclone_used    = $flexclone_used/1024/1024;
-
 	    # parent volume: space used - represent data used in MB
 	    my $parent_used = $vol_usage_map{$volume_name}/1024/1024;
 
 	    # split estimate value is returned in blocks rather than bytes
-	    $split_est      = $split_est*4096/1024/1024; # blocks => MiB
+	    $split_est      = $split_est*4096; # blocks => Bytes
 
 	    # storage used by the FlexClone
 	    my $flexclone_actual = $flexclone_used - $split_est;
@@ -499,6 +506,15 @@ sub list_flexclones {
 	    # calculate % savings
 	    my $savings      = ($flexclone_actual/$flexclone_used)*100;
 	    my $compression  = (1-$flexclone_actual/$flexclone_used)*100;
+
+	    # FlexClone volume: space used - represent data used in MB
+	    $flexclone_used    = $flexclone_used/1024/1024;
+
+	    # FlexClone calculated actual: space used - represent data used in MB
+	    $flexclone_actual    = $flexclone_actual/1024/1024;
+
+	    # split estimate value is returned in blocks rather than bytes
+	    $split_est      = $split_est/1024/1024; # date in MiB
 
 	    # determine juction-path info
 	    my $jpath       = $vol_data->child_get_string( "junction-path"  );
@@ -514,7 +530,7 @@ sub list_flexclones {
 	    }
 
 	    # print results
-	    printf "%-20s %-30s %-30s ", $volume_name, $snapshot, $clone_name;
+	    printf "%-25s %-30s %-30s ", $volume_name, $snapshot, $clone_name;
 	    printf "%11.2f MB ",         $parent_used;
 	    printf "%11.2f MB ",         $flexclone_used;
 	    printf "%11.2f MB ",         $split_est;
