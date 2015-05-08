@@ -114,7 +114,7 @@
     ----------------------------------------
 
     Step #2: Create new volume (*** SKIP THIS STEP IF YOUR VOLUME ALREADY EXISTS ***)
-	%> ./CeCreateVolume.pl -vol ce_test_volume
+	%> ./CeCreateVolume.pl -vol nightly_builds
 
 	This will create a volume which is automatically mounted at /home/mj_perforce/mnt/daemon/ce_test_daemon
 	because we specified a junction-path, user_id, group_id, and unix-permissions with the volume-create

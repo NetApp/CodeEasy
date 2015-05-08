@@ -2,6 +2,21 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.0.4-Alpha  (release date: 2015-05-08)
+----------------------------------------
+    Release for External Consumption
+
+    Added NetApp Copyright notice per NetApp legal policies. 
+    Minor code and documentation clean-up of CeInit.pm.
+    
+    Added -comment <text> to the FlexClone creation command. The 
+    -comment field now contains the FlexClown Owner username. This 
+    will help with tracking who owns which FlexClones.
+
+    The FlexClone report now shows the FlexClone owners.  
+
+
+
 CodeEasy_1.0.3-Alpha  (release date: 2015-04-14)
 ----------------------------------------
     Release for External Consumption

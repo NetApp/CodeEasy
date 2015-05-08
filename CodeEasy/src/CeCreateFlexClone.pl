@@ -308,13 +308,16 @@ sub clone_create {
     # CE_JUNCT_PATH_USERS vs the CE_JUNCT_PATH_MASTER
     my $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
 
+    my $comment_field = $username;
+
     print "INFO  ($progname): Creating FlexClone volume\n" .
           "      flexclone volume name = $flexclone_vol_name\n" .
           "      parent-volume         = $volume\n" .
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
           "      UNIX mount path       = $UNIX_mount_path\n" .
-          "      UNIX clone path       = $UNIX_clone_path\n\n";
+          "      UNIX clone path       = $UNIX_clone_path\n" .
+	  "      Comment (clown owner) = $comment_field \n\n";
                   
 
     #--------------------------------------- 
@@ -323,7 +326,8 @@ sub clone_create {
     $out = $naserver->invoke("volume-clone-create", "parent-volume",   $volume, 
                                                     "parent-snapshot", $parent_snapshot,
                                                     "volume",          $clone_name,
-						    "junction-path",   $junction_path
+						    "junction-path",   $junction_path,
+						    "comment",         $comment_field
 						    );
 
     # check status of the invoked command
@@ -435,6 +439,7 @@ sub list_flexclones {
     my $naserver = &CeCommon::init_filer();
 
     my %junction_path_map;
+    my %comment_field_map;
     my %vol_usage_map;
     my %vol_dedup_saved;
     my %vol_dedup_shared;
@@ -443,12 +448,25 @@ sub list_flexclones {
 
     foreach my $tattr ( @vlist ) {
 	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
+    #print "DEBUG: volume-id-attributes\n";
+    #printf($tattr->sprintf());
 	my $volume_name;
 	if ( $vol_id_attrs ) {
 	    $volume_name = $vol_id_attrs->child_get_string( "name" );
+
+	    # get the junction path info for the volume - store it in a lookup for later
 	    my $jpath = $vol_id_attrs->child_get_string( "junction-path" );
 	    $junction_path_map{$volume_name} = $jpath;
 	    print "DEBUG: Volume: $volume_name \tJunction Path: $jpath \n" if ($verbose);
+
+	    # get the comment field from the volume - store it in a lookup for later
+	    my $comment_field = $vol_id_attrs->child_get_string( "comment" );
+	    if (defined $comment_field) {
+		$comment_field_map{$volume_name} = $comment_field;
+	    } else {
+		$comment_field_map{$volume_name} = "USER_UNKNOWN";
+	    }
+	    print "DEBUG: Volume: $volume_name \tComment Field: $comment_field_map{$volume_name}\n" if ($verbose);
 	}
 	my $vol_space_attrs = $tattr->child_get( "volume-space-attributes" );
 	if ( $vol_space_attrs ) {
@@ -481,9 +499,10 @@ sub list_flexclones {
     printf  "%15s",               "FlexClone Vol";
     printf  "%15s",               "Split Est";
     printf  "%24s",               "FlexClone Act";
+    printf  "%15s",               "Cloan Owner";
     printf  "  %s \n",            "Junction-path";
     print   "---------------------------------------------------------------------------------------" .
-            "---------------------------------------------------------------------------------------\n"; 
+            "---------------------------------------------------------------------------------------------------\n"; 
 
     # for each clone entry
     foreach my $vol_data ( @vlist ) {
@@ -493,6 +512,8 @@ sub list_flexclones {
 	    my $snapshot       = $vol_data->child_get_string( "parent-snapshot");
 	    my $flexclone_used = $vol_data->child_get_string( "used"           );
 	    my $split_est      = $vol_data->child_get_string( "split-estimate" );
+	    my $comment_field  = $comment_field_map{$clone_name};
+	       $comment_field  = "USER_UNKNOWN" if ($comment_field eq "");
 
 	    # parent volume: space used - represent data used in MB
 	    my $parent_used = $vol_usage_map{$volume_name}/1024/1024;
@@ -537,6 +558,7 @@ sub list_flexclones {
 	    printf "%11.2f MB",          $flexclone_actual;
 	    printf " (%5.2f",            $savings; print "%)";
 	    #printf " (%5.2f",           $compression; print "%)";
+	    printf "%15s",               $comment_field;
 	    printf "  %s\n",             $jpath;
     }
 
