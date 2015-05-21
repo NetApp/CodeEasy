@@ -1,0 +1,111 @@
+If there is no user account that the Remote Support Agent can use, create one by using the security login command.
+You must create the user account on the cluster Vserver and it must have access to the vserver options command.
+
+Example
+[STEP 4: GET COMMAND SYNTAX]
+
+    clusterab::> security login role create ? 
+				 
+      [ -vserver <vserver name> ]  Vserver (default: clusterab)
+       [-role] <text>              Role Name
+       [-cmddirname] <text>        Command / Directory
+      [[-access] <Access>]         Access Level (default: all)
+      [ -query <query> ]           Query (default: "")
+
+[STEP 4: CREATE ROLE "rsa" ON THE DIRECTORY NAMED "DEFAULT"]
+
+    clusterab::> security login role create -vserver clusterab -role rsa -cmddirname DEFAULT
+
+[STEP 4: SHOW THE ROLE CONFIGURATION]
+
+    clusterab::> security login role show -vs clusterab  
+					 
+	       Role          Command/                       Access
+    Vserver    Name          Directory                Query Level
+    ---------- ------------- --------- -------------------- --------
+    clusterab  admin         DEFAULT                        all
+    clusterab  rsa           DEFAULT                        all
+    clusterab  none          DEFAULT                        none
+    clusterab  readonly      DEFAULT                        readonly
+    clusterab  readonly      security                       none
+    clusterab  readonly      security login password        all
+    clusterab  readonly      set                            all
+    7 entries were displayed.	
+
+[STEP 4: SHOW ACCESS. THE NEW "rsa" ROLE DOES NOT SHOW BECAUSE NO USER ACCOUNT HAS BEEN CREATED.]			
+		
+    clusterab::> security login show 
+      
+    Vserver: clusterab
+				 Authentication                  Acct
+    UserName         Application Method         Role Name        Locked
+    ---------------- ----------- -------------- ---------------- ------
+    admin            console     password       admin            no
+		     http        password       admin            no
+		     ontapi      password       admin            no
+		     service-processor 
+				 password       admin            no
+		     ssh         password       admin            no
+    public           snmp        community      readonly         -
+    Vserver: vs0
+				 Authentication                  Acct
+    UserName         Application Method         Role Name        Locked
+    ---------------- ----------- -------------- ---------------- ------
+    vsadmin          http        password       vsadmin          yes
+		     ontapi      password       vsadmin          yes
+		     ssh         password       vsadmin          yes
+    9 entries were displayed.
+
+[STEP 4: GET COMMAND SYNTAX]
+
+    clusterab::> security login create ?
+
+      [ -vserver <vserver name> ]  Vserver (default: clusterab)
+       [-username] <text>          User Name
+       [-application] <text>       Application
+       [-authmethod] <text>        Authentication Method
+      [[-role] <text>]             Role Name (default: admin)
+      [[-comment] <text>]          Comment(more than one word, within quotes)
+
+[STEP 4: CREATE A USER ACCOUNT "rsauser" FOR HTTP ON THE CLUSTER VSERVER]
+
+    clusterab::> security login create -vserver clusterab -username rsauser 
+    -application http -authmethod password -role rsa 
+
+    Please enter a password for user 'rsauser':  [THIS PASSWORD IS THE AGENT ADMINISTRATOR USER PASSWORD]
+    Please enter it again: 
+
+
+[STEP 4: CREATE A USER ACCOUNT "rsauser" FOR ONTAPI ON THE CLUSTER VSERVER]
+    [PASSWORD IS NOT PROMPTED BECAUSE YOU ENTERED ONE IN THE PREVIOUS COMMAND]
+
+    clusterab::> security login create -vserver clusterab -username rsauser 
+    -application ontapi -authmethod password -role rsa
+
+
+[STEP 4: SHOW USER ACCOUNTS]
+
+    clusterab::> security login show  
+												     
+    Vserver: clusterab
+				 Authentication                  Acct
+    UserName         Application Method         Role Name        Locked
+    ---------------- ----------- -------------- ---------------- ------
+    admin            console     password       admin            no
+		     http        password       admin            no
+		     ontapi      password       admin            no
+		     service-processor 
+				 password       admin            no
+		     ssh         password       admin            no
+    public           snmp        community      readonly         -
+    rsauser          http        password       rsa              no
+		     ontapi      password       rsa              no
+    Vserver: vs0
+				 Authentication                  Acct
+    UserName         Application Method         Role Name        Locked
+    ---------------- ----------- -------------- ---------------- ------
+    vsadmin          http        password       vsadmin          yes
+		     ontapi      password       vsadmin          yes
+		     ssh         password       vsadmin          yes
+    11 entries were displayed.
+
