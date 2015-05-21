@@ -36,6 +36,20 @@
     Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
     
 
+****************************************
+  ONTAPI filer permission setup
+****************************************
+    To enable filer access via the NetApp Manageability SDK vserver
+    permissions must be setup to enable 'ontapi' permissions.
+
+    Read the file ONTAPI_SETUP file in the CodeEasy/docs directory for full
+    instructions.
+
+    Example: CREATE A USER ACCOUNT "rsauser" FOR ONTAPI ON THE CLUSTER VSERVER]
+	clusterab::> security login create -vserver clusterab -username rsauser 
+	-application ontapi -authmethod password -role rsa
+
+
 
 ****************************************
   Setup and Test CodeEasy Script
