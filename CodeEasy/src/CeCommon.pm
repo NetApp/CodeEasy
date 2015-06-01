@@ -12,8 +12,6 @@
 #              $my_subroutine $CeCommon::my_subroutine
 #          
 #
-# Usage:   %> CeCreateVole.pl <args> 
-#
 # Author:  Michael Johnson (michael.johnson@netapp.com)
 #           
 #
@@ -38,6 +36,7 @@ use Env;           # package to allow reading UNIX environment vars
 use Cwd;
 use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
+use warnings;
 
 
 #---------------------------------------- 
@@ -45,7 +44,7 @@ use strict;        # require strict programming rules
 #---------------------------------------- 
 # SDK setenv not set, assume the SDK is in parallel to the CodeEasy
 # tarball installation    ***** CUSTOMIZE ME *****
-use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
+use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.3.1/lib/perl/NetApp";
 # use lib "<your_full_path>/netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
 
 # load the NetApp Manageability SDK components
@@ -77,21 +76,35 @@ sub init_filer {
 
     # Creates a new object of NaServer class and sets the default value for the following object members:
     #   syntax: new($server, $majorversion, $minorversion)
-    print "\tstorage controler  = $CeInit::CE_CLUSTER_PORT\n";
-    my $naserver = NaServer->new($CeInit::CE_CLUSTER_PORT, 1, 1);
+    print "\tCluster controler  = $CeInit::CE_CLUSTER\n";
+    my $naserver = NaServer->new($CeInit::CE_CLUSTER, 1, 21);
 
     # sets the name of the Storage Virtual Machine (SVM, formerly known as Vserver) 
     # to which a Cluster API need to be tunneled from a Cluster Management Interface.
-    print "\tset_vserver        = $CeInit::CE_DEFAULT_VSERVER\n";
-    $naserver->set_vserver($CeInit::CE_DEFAULT_VSERVER);
+    $naserver->set_vserver($CeInit::CE_VSERVER);
+    # read back set value
+    my $vserver = $naserver->get_vserver();
+    print "\tset_vserver        = $vserver\n";
 
     # set API transport type - HTTP is the default
-    print "\tset_transport_type = HTTP\n";
-    $naserver->set_transport_type("HTTP");
+    $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE);
+    # read back set value
+    my $transport_type = $naserver->get_transport_type();
+    print "\tset_transport_type = $CeInit::CE_TRANSPORT_TYPE\n";
 
     # pass username/password for vserver ontapi application access
     #     $naserver->set_admin_user("vsadmin", "devops123");
     $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
+
+    # set communication style - typically just 'LOGIN'
+    $naserver->set_style($CeInit::CE_STYLE);
+
+    # set communication port
+    $naserver->set_port($CeInit::CE_PORT);
+    # read back set value
+    my $port_value = $naserver->get_port();
+    print "\tset_port           = $port_value\n\n";
+
 
     # check connection to the filer by requesting a simple ontapi version status
     $out =  $naserver->invoke("system-get-version");
@@ -99,21 +112,21 @@ sub init_filer {
     # check error status and exit if basic communication with the filer can't be estabilished.
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($main::progname): FAIL: Unable to connect to $CeInit::CE_CLUSTER_PORT \n";
+        print "ERROR ($main::progname): FAIL: Unable to connect to $CeInit::CE_CLUSTER \n";
         print "ERROR ($main::progname): system-get-version returned with $errno and reason: " . 
 	                          '"' .  $out->results_reason() . "\n";
         print "ERROR ($main::progname): Exiting with error.\n";
         exit 1;
     }
-    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running ONTAP API version:\n" . 
+    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running ONTAP API version:\n" . 
           "      " . $out->child_get_string("version") . " \n\n";
       
 
     # check that filer is running cDOT and not 7-mode
     if ( $out->child_get_string("is-clustered") eq "true") {
-	print "\nDEBUG ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running cDOT.\n\n" if ($main::verbose);
+	print "\nINFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running cDOT.\n\n";
     } else {
-	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_CLUSTER_PORT> is running in 7-mode\n" .
+	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running in 7-mode\n" .
 	        "       These scripts support cDOT (Clustered Data OnTap) only\n" .
 	        "Exiting...\n";
 	exit 1;

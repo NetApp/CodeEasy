@@ -15,19 +15,6 @@
 # declair this file (.pm) as a Perl package
 package CeInit;
 
-########################################
-# UNIX File System Setup
-########################################
-    # UNIX path where master volume is mounted 
-    #      this is volume which will be snapshot and flexcloned.
-    our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/proj/viper/viper_nightly_builds";
-
-    # USER FlexClones will be stored at 
-    #    /x/eng/<site>/users/<username>/<flexclone> 
-    #    the CeCreateFlexClone.pl will automatically add the <username> to the
-    #    path - the filer junction path will automatically mount this location
-    our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/proj/viper/users";
-
 
 ########################################
 # NetApp Storage Config Info  
@@ -40,11 +27,15 @@ package CeInit;
     #            cluster> security login show
     #
     #   SDK API Example:  $naserver->set_admin_user("vsadmin", "devops123");
-    our @CE_ADMIN_USER  = ("vsadmin","devops123");
+    our $CE_STYLE           = "LOGIN";           # Sets the authentication mechanism to be used for communicating with the given server.
+                                                 # default is 'LOGIN'
+    our @CE_ADMIN_USER      = ("vsadmin","devops123");
 
-    our $CE_CLUSTER_PORT    = "sv5-devops-01";   # management port 
-    our $CE_DEFAULT_VSERVER = "sv5-devops-01";   # name of the vserver port
-    our $CE_TRANSPORT_TYPE  = "HTML";            
+    our $CE_CLUSTER         = "sv5-devops-01";   # management port 
+    our $CE_VSERVER         = "sv5-devops-01";   # name of the vserver port
+    our $CE_TRANSPORT_TYPE  = "HTTP";            # The default transport type is HTTP. For secure transport, use HTTPS as the transport type.
+    our $CE_PORT            = "80";              # Sets the port on which the API commands need to be invoked for the given server context
+                                                 # HTTP -> use port 80, HTTPS -> use port 443
 
     # default volume name - is the default used by CeCreateSnapshot and CeCreateFlexClone
     our $CE_DEFAULT_VOLUME_NAME    = "viper_nightly_builds";
@@ -63,6 +54,37 @@ package CeInit;
     our $CE_JUNCT_PATH_USERS       = "$CE_JUNCT_PATH_ROOT/users";
 
 
+########################################
+# UNIX File System Setup
+########################################
+
+    # UNIX path where master volume is mounted 
+    #      this is volume which will be snapshot and flexcloned.
+    our $CE_UNIX_MASTER_VOLUME_PATH  = "/home/ubuntu/proj/viper/viper_nightly_builds";
+
+    # USER FlexClones will be stored at 
+    #    /x/eng/<site>/users/<username>/<flexclone> 
+    #    the CeCreateFlexClone.pl will automatically add the <username> to the
+    #    path - the filer junction path will automatically mount this location
+    our $CE_UNIX_USER_FLEXCLONE_PATH = "/home/ubuntu/proj/viper/users";
+
+
+    #---------------------------------------- 
+    # misc UNIX tool paths 
+    #    this may need to be modified based on customer environment
+    #---------------------------------------- 
+    our $CE_CMD_FIND   = "/usr/bin/find";
+    our $CE_CMD_XARGS  = "/usr/bin/xargs";
+
+    # sur script for handling permission changes etc.  
+    # compiled as part of this kit
+    our $CE_CMD_SUR    = "$FindBin::Bin/sur";
+
+
+
+########################################
+# OPTIONAL: Required to use CeCreateVolume.pl
+########################################
     #---------------------------------------- 
     # Volume attributes 
     #   ONLY USED with CeCreateVolume.pl
@@ -100,23 +122,15 @@ package CeInit;
                                                      
 
 
-    #---------------------------------------- 
-    # misc UNIX tool paths 
-    #    this may need to be modified based on customer environment
-    #---------------------------------------- 
-    our $CE_CMD_FIND   = "/usr/bin/find";
-    our $CE_CMD_XARGS  = "/usr/bin/xargs";
-
-    # sur script for handling permission changes etc.  
-    # compiled as part of this kit
-    our $CE_CMD_SUR    = "$FindBin::Bin/sur";
 
 
 ########################################
 # Export variable for use by flow
 ########################################
 our @EXPORT = qw(@CE_ADMIN_USER$
-                 $CE_CLUSTER_PORT $CE_DEFAULT_VSERVER 
+                 $CE_CLUSTER $CE_VSERVER 
+		 $CE_STYLE
+                 $CE_TRANSPORT_TYPE $CE_PORT
 		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH 
                  $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS
 		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS

@@ -28,10 +28,13 @@
 #
 ################################################################################
 
+require 5.6.1;
+
 use Cwd;
 use Getopt::Long;  # Perl library for parsing command line options
 use FindBin();     # The FindBin helps indentify the path this executable and thus its path
 use strict;        # require strict programming rules
+use warnings;
 
 # load NetApp manageability SDK APIs
 #   --> this is done in the CeCommon.pm package
