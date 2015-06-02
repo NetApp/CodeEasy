@@ -320,7 +320,7 @@ sub clone_create {
           "      junction path         = $junction_path \n" .
           "      UNIX mount path       = $UNIX_mount_path\n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
-	  "      Comment (clown owner) = $comment_field \n\n";
+	  "      Comment (clown owner) = <$comment_field> \n\n";
                   
 
     #--------------------------------------- 

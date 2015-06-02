@@ -45,13 +45,18 @@ package CeInit;
     # root of the junction path 
     # this should be mounted on the unix side, then all other flexclones are automatically mounted when created.
     #      sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
-    our $CE_JUNCT_PATH_ROOT        = "/proj/viper";    
 						    
     # location on the filer where MASTER volume and snapshots are stored
-    our $CE_JUNCT_PATH_MASTER      = "$CE_JUNCT_PATH_ROOT";
+    our $CE_JUNCT_PATH_MASTER      = "/proj/viper";
+    # Default volume will be created (or exists) at 
+    #    JP = $CD_JUNCT_PATH_MASTER/$CE_DEFAULT_VOLUME_NAME
+    #         /proj/viper/viper_nightly_builds     , where viper_nightly_builds is a volume
 
     # location on the filer where USERS FlexClone volumes are stored
-    our $CE_JUNCT_PATH_USERS       = "$CE_JUNCT_PATH_ROOT/users";
+    our $CE_JUNCT_PATH_USERS       = "/proj/viper/users";
+    # FlexClones will be created at 
+    #    JP = $CE_JUNCT_PATH_USERS/<flexclone name>
+
 
 
 ########################################
