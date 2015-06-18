@@ -65,6 +65,7 @@ our $verbose;                      # cmdline arg: verbosity level
 
 my $MAX_RECORDS = 200;
 
+
 ############################################################
 # Start Program
 ############################################################
@@ -292,10 +293,14 @@ sub clone_create {
 
     # create user path directory - this directory must exist for the lower
     # level mount to attach correctly. 
-    if ( system ("/bin/mkdir -p $UNIX_mount_path") == 0) {
+    my $cmd = "/bin/mkdir -p $UNIX_mount_path";
+
+    if ( system ($cmd) == 0) {
 	print "DEBUG ($progname): Created UNIX mount point for new FlexClone at $UNIX_mount_path\n" if ($verbose);
     } else {
 	print "ERROR ($progname): Could not create UNIX mount point for new FlexClone at $UNIX_mount_path\n" .
+	      "       Check that the UNIX path and permissions exist.\n" .
+	      "       $cmd\n" .
 	      "Exiting...\n";
 	exit 1;
     }
@@ -311,6 +316,11 @@ sub clone_create {
     # CE_JUNCT_PATH_USERS vs the CE_JUNCT_PATH_MASTER
     my $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
 
+    # place the FlexClone owner in the comment field so it can be tracked.
+    # This can be any information which might make sense.
+    # NOTE: 8.2.x does not support the comment field in the
+    # volume-clone-create command - but the comment field exists - its just
+    # not setable. 
     my $comment_field = $username;
 
     print "INFO  ($progname): Creating FlexClone volume\n" .
@@ -320,7 +330,7 @@ sub clone_create {
           "      junction path         = $junction_path \n" .
           "      UNIX mount path       = $UNIX_mount_path\n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
-	  "      Comment (clown owner) = <$comment_field> \n\n";
+	  "      Comment (clown owner) = <$comment_field>\n\n";
                   
 
     #--------------------------------------- 
@@ -328,10 +338,12 @@ sub clone_create {
     #--------------------------------------- 
     $out = $naserver->invoke("volume-clone-create", "parent-volume",   $volume, 
                                                     "parent-snapshot", $parent_snapshot,
-                                                    "volume",          $clone_name,
+                                                    "volume",          $flexclone_vol_name,
 						    "junction-path",   $junction_path,
-						    "comment",         $comment_field
 						    );
+						    # add this line back to the volume-clone-create
+						    # command if using cDOT8.3 or later
+						    #"comment",         $comment_field
 
     # check status of the invoked command
     $errno = $out->results_errno();

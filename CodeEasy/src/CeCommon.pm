@@ -57,6 +57,8 @@ use NaElement;
 use lib "$FindBin::Bin/.";
 use CeInit;                   # found in the file CeInit.pm
 
+$main::cdot_version = "unknown";     # variable holder for cDOT version
+
 
 
 ###################################################################################
@@ -118,9 +120,12 @@ sub init_filer {
         print "ERROR ($main::progname): Exiting with error.\n";
         exit 1;
     }
+
+    # print the controller version
+    # Example:       NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
+    $main::cdot_version = $out->child_get_string("version");
     print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running ONTAP API version:\n" . 
-          "      " . $out->child_get_string("version") . " \n\n";
-      
+          "      $main::cdot_version\n\n";
 
     # check that filer is running cDOT and not 7-mode
     if ( $out->child_get_string("is-clustered") eq "true") {
