@@ -157,16 +157,16 @@ sub package_release {
     my $cmd;
 
     # new release directory
-    $release_dir = "$release_dir/$version_name";
+    my $full_release_dir = "$release_dir/$version_name";
 
     # make release directory
-    $cmd = "/bin/mkdir -p $release_dir";
+    $cmd = "/bin/mkdir -p $full_release_dir";
     if (system($cmd) == 0) {
 	print "INFO ($progname): Successfully created release directory\n" .
-	      "     $release_dir\n";
+	      "     $full_release_dir\n";
     } else {
 	print "ERROR ($progname): failed to create release directory\n" .
-	      "     $release_dir\n" .
+	      "     $full_release_dir\n" .
 	      "     Exiting...\n";
 	exit 1;
     }
@@ -175,14 +175,14 @@ sub package_release {
     foreach my $item (@packaging_list) {
 
 	# copy each item to the release area
-	$cmd = "/bin/cp -r $proj_dir/$item $release_dir/.";
+	$cmd = "/bin/cp -r $proj_dir/$item $full_release_dir/.";
 	print "DEBUG: $cmd\n";
 	if (system($cmd) == 0) {
 	    print "INFO ($progname): Successfully copied $item\n" .
-		  "     $release_dir\n";
+		  "     $full_release_dir\n";
 	} else {
 	    print "ERROR ($progname): failed to copy $item to the $proj_dir\n" .
-		  "     $release_dir\n" .
+		  "     $full_release_dir\n" .
 		  "     Exiting...\n";
 	    exit 1;
 	}
@@ -190,7 +190,7 @@ sub package_release {
     }
 
     # clean-out all CVS directories from the release
-    $cmd = qq[/bin/find $release_dir -type d -name CVS -exec /bin/rm -fr {} \\; ];
+    $cmd = qq[/bin/find $full_release_dir -type d -name CVS -exec /bin/rm -fr {} \\; ];
     if (system("$cmd") == 0) {
 	print "INFO ($progname): Successfully removed CVS directories\n";
     } else {
@@ -200,17 +200,20 @@ sub package_release {
 
     # remove misc files
     foreach my $file (@files_to_remove) {
-	if (-e "$release_dir/$file" ) {
-	    $cmd = "/bin/rm -f $release_dir/$file";
+	if (-e "$full_release_dir/$file" ) {
+	    $cmd = "/bin/rm -f $full_release_dir/$file";
 	    system($cmd);
 	}
     }
 
+    # change dir to release directory before making tarball
+    chdir($release_dir);
+
     # generate tarball
-    $cmd = "/bin/tar -zcvf ${release_dir}.tgz $release_dir";
+    $cmd = "/bin/tar -zcvf ${version_name}.tgz $version_name";
     print "DEBUG: $cmd\n";
     if (system($cmd) == 0) {
-	print "INFO ($progname): Release tarball ${release_dir}.tgz\n";
+	print "INFO ($progname): Release tarball ${release_dir}/$version_name.tgz\n";
     } else {
 	print "ERROR ($progname): failed to create release tarball\n" .
 	      "     $cmd\n";
