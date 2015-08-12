@@ -10,20 +10,20 @@
 	The SDK can be found on the mysupport.netapp.com 
 	Downloads -> Software -> NetApp Manageability SDK
 	Select "All Platforms" -> Go!
-	Select "NetApp Manageability SDK 5.2.2" -> View & Download
+	Select "NetApp Manageability SDK 5.4" -> View & Download
 
-	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.2.2.zip
+	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.4.zip
 
     STEP 2: Place the CodeEasy evalkit and the SDK next to each other.
 	%> cd <workspace>
-	%> unzip netapp-manageability-sdk-5.2.2.zip
+	%> unzip netapp-manageability-sdk-5.4.zip
 
     STEP 3: Download and untar the CodeEasy evalkit
 	%> tar -zxvf CodeEasy_1.x.x-Alpha.tgz
 
     The final directory structure should look something like.
     <workspace>/
-    	netapp-manageability-sdk-5.2.2/
+    	netapp-manageability-sdk-5.4/
 	CodeEasy_1.0.0-Alpha/
 
     The CodeEasy Perl scripts assume the SDK is at the same level as the eval
@@ -32,23 +32,65 @@
 
     NOTE: If the SDK is installed in a different location, edit the path in
     the CeCommon.pm file to use the correct path.
-    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
-    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.2.2/lib/perl/NetApp";
+    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
+    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
     
 
 ****************************************
   ONTAPI filer permission setup
 ****************************************
     To enable filer access via the NetApp Manageability SDK vserver
-    permissions must be setup to enable 'ontapi' permissions.
+    permissions must be setup to enable 'ontapi' and 'ssh' access permissions.
 
     Read the file ONTAPI_SETUP file in the CodeEasy/docs directory for full
     instructions.
 
-    Example: CREATE A USER ACCOUNT "rsauser" FOR ONTAPI ON THE CLUSTER VSERVER]
-	clusterab::> security login create -vserver clusterab -username rsauser 
-	-application ontapi -authmethod password -role rsa
+    Example: CREATE A USER ACCOUNT "devops" FOR ONTAPI ON THE CLUSTER VSERVER
+	cluster::> security login create -vserver clusterab -username devops \
+                     -application ontapi -authmethod password -role rsa
+	cluster::> security login create -vserver clusterab -username devops \
+                     -application ssh -authmethod password -role rsa
 
+        cluster::> security login show
+
+
+
+****************************************
+  Setup Project Volumes
+****************************************
+    REFERENCE: <codeeasy dir>/doc/Project_Example.txt to see UNIX/volume/junction_path mappings
+
+    This is just an example implementation to demonstrate how the FlexClone and junction_path mounts work.  
+    RECOMMENDATION: get this implementation working, then customize the setup for your specific project structure.
+
+    Step #1 Create top level project volume - ce_projects
+       This will be the root of the junction_path
+
+       vserver::> volume create -volume ce_projects -junction_path /ce_projects -policy codeeasy_exports \
+                                -security-style unix -unix-permissions ---rwxrwxrwx <other options>
+
+    Step #2 NFS mount top level project volume (or edit /etc/fstab or update automount)
+
+       UNIX %> sudo mount -t nfs vserver:/ce_projects /ce_projects
+            %> cd /ce_projects
+            %> ls 
+
+    Step #3 Create project volume - project_A
+
+       vserver::> volume create -volume project_A -junction_path /ce_projects/project_A -policy codeeasy_exports \
+                                -security-style unix -unix-permissions ---rwxrwxrwx <other options>
+
+    Step #4 Create continuous build area (jenkin) volume
+       NOTE: the volume and junction_path names are different.  The volume name will be unique in the case there is a project_B_jenkin_build volume.
+             Again this is just a suggested volume/flexclone/unix structure.
+
+       vserver::> volume create -volume project_A_jenkin_build -junction_path /ce_projects/project_A/jenkin_build -policy codeeasy_exports \
+                                -security-style unix -unix-permissions ---rwxrwxrwx <other options>
+
+    Step #5 Check that the directory is mounted and read/writeable
+       UNIX %> cd /ce_projects/project_A/jenkin_build
+            %> cp <misc data into this directory as test case data to be cloned>
+            
 
 
 ****************************************
@@ -64,14 +106,6 @@
     setup.  The file is well commented, so read thru the file and edit each
     line as required to localize the script to your environment. 
 
-    Review vserver admin doc: Configuring your storage system in a cluster environment
-    https://library.netapp.com/ecmdocs/ECMP1200040/html/GUID-A49C52A4-0E67-47C6-96A7-F8BBC055971E.html 
-
-    The NetApp manageability SDK access will NOT work without 'ontapi'
-    application permissions set for the vserver admin user.
-    Check vserver security settings
-    cluster> security login show
-
     ----------------------------------------
     Test the CodeEasy Scripts 
     ----------------------------------------
@@ -80,13 +114,18 @@
     connectivity to the vserver
 
     Example:
+    %> cd <codeeasy dir>/src
     %> ./CeCreateSnapshot -test
 	INFO  (CeCreateSnapshot.pl): Connecting to storage controler/vserver
-		storage controler  = sv5-devops-01
-		set_vserver        = sv5-devops-01
-		set_transport_type = HTTP
+		vserver        = sv5-devops-01
+		transport_type = HTTP
 	INFO  (CeCreateSnapshot.pl): Storage Controller <sv5-devops-01> is running ONTAP API version:
 	      NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
+
+    Resolve Errors
+    If the test option returns an error, most likely it is due to misconfigured options in the 
+    CeInit.pm file. Check that the vserver user login has both ontapi and ssh access permissions 
+    enabled.  
 
 
 ****************************************
@@ -107,7 +146,7 @@
 	
 	%> sudo mount -t nfs <vserver>:<filer path>      <UNIX mount point>
 
-	%> sudo mount -t nfs sv5-devops-01:/share/devops /home/ubuntu/mj_perforce/mnt
+	%> sudo mount -t nfs vserver:/ce_projects /ce_projects
 
 
     Step #1B: Compile sur and fast_chown scripts
@@ -142,21 +181,21 @@
 	purposes of this initial testing without a RCS tool, we can just copy a
 	bunch of files - of significant size - to the new volume.
 
-	%> cp -R /home/ubuntu/mj_perforce/pf_evalkit/netapp-manageability-sdk-5.2.2 /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/
+	%> cp -R netapp-manageability-sdk-5.4 /ce_projects/project_A/jenkin_build/
 
     Step #4: Create a file list to be later when changing ownership of the flexclone
 
-	%> ./CeFileListGen.pl -d /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume
+	%> ./CeFileListGen.pl -d /ce_projects/project_A/jenkin_build
 
-	This step will create a file in the volume called /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/filelist_BOM
+	This step will create a file in the volume called /ce_projects/project_A/jenkin_build/filelist_BOM
 	Again this file will be read by the CeChownList.pl script to change the
 	flexclone directory and file ownership from the Daemon (aka build user)
 	ownership to the new users ownership.
 
     Step #5: Create a Snapshot called ce_test_snap_01
-	%> ./CeCreateSnapshot.pl -vol ce_test_volume -snapshot ce_test_snap_01
+	%> ./CeCreateSnapshot.pl -snapshot project_A_snap_20150811
 
-	There should now be a new snapshot at /home/ubuntu/mj_perforce/mnt/daemon/ce_test_volume/.snapshot/ce_test_snap_01
+	There should now be a new snapshot at /ce_projects/project_A/jenkin_build/.snapshot/project_A_snap_20150811
 
 	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
 
@@ -172,9 +211,9 @@
 
     Step #6: Create a FlexClone based on the Snapshot created in step #5
 
-	%> ./CeCreateFlexClone.pl -volume ce_test_volume -snapshot ce_test_snap_01 -clone ce_test_snap_01_clone
+	%> ./CeCreateFlexClone.pl  -snapshot project_A_snap_20150811 -clone project_A_snap_20150811_clone
 
-	There should now be a FlexClone volume mounted at UNIX path /home/mj_perforce/mnt/users/ce_test_snap_01_clone
+	There should now be a FlexClone volume mounted at UNIX path /ce_projects/project_A/users/<USER>/project_A_snap_20150811_clone
 	Note that the permissions at this point on the files and directories are
 	the same as that of the Snapshot from which it came.
 
@@ -182,7 +221,7 @@
 
     Step #7: Change ownership of the FlexClone volume to that of the current user
 
-	%> ./sur ./CeChownList.pl devops -d /home/ubuntu/mj_perforce/mnt/users/ce_test_snap_01_clone -u ubuntu
+	%> ./sur ./CeChownList.pl devops -d /ce_projects/project_A/users/<USER>/project_A_snap_20150811_clone -u ubuntu
 
 	The FlexClone volume should now have the permission of the normal
 	users - in this case user 'ubuntu'.  

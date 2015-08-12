@@ -2,6 +2,18 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.0.6-Alpha  (release date: 2015-08-05)
+----------------------------------------
+    Removed references to CE_CLUSTER since all references should just
+    be to the VSERVER.  CE_VSERVER replaces all CE_CLUSTER values.  
+
+    Updated version information for API to use 21. This seems to work.
+    Updated test environment example to use new internal NetApp DevTest area.
+
+CodeEasy_1.0.5-Alpha  (release date: 2015-06-27)
+----------------------------------------
+- internal release only -
+
 CodeEasy_1.0.4-Alpha  (release date: 2015-05-08)
 ----------------------------------------
     Release for External Consumption

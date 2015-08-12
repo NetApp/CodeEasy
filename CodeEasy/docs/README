@@ -7,8 +7,8 @@ Installation Instructions
 1. Untar the eval kit tarball
    %> tar zxvf CodeEasy_x.x.x.tgz
 
-2. Download the NetApp Manageability SDK 5.2.2 from the support.netapp.com site
-   netapp-manageability-sdk-5.2.2
+2. Download the NetApp Manageability SDK 5.3.1 from the support.netapp.com site
+   netapp-manageability-sdk-5.3.1
 
 4. Follow the instructions in the QUICKSTART guide (found in this tarball) 
 
@@ -21,10 +21,10 @@ cDOT
     7-mode.
 
     cDOT version 8.1 or later should work fine.  Development testing was done on
-    a cDOT 8.2.2.
+    a cDOT 8.3.x.
 
 Manageability-SDK
-    The 5.2.2 version of the NetApp Manageability-SDK release notes say the following;
+    The 5.3.1 version of the NetApp Manageability-SDK release notes say the following;
 
     - To use the Data ONTAP management APIs, storage systems should be running Data ONTAP 6.3 or later.
     - OS Requirements
