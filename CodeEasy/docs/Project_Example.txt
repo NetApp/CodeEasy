@@ -15,13 +15,13 @@ ce_projects                                                ce_projects          
         └── <project contents>                             <project files/directories>   
     ├── nightly_regression                                 project_C_nightly_regression  /ce_projects/project_C/nightly_regression
     ├── release_builds                                     project_C_release_builds      /ce_projects/project_C/release_builds
-    └── users                                              <stardard UNIX dir>           <standard UNIX dir>
-        ├── cptmorgan                                      <stardard UNIX dir>           <standard UNIX dir>
+    └── users                                              qtree or UNIX dir             qtree or UNIX dir
+        ├── cptmorgan                                      qtree or UNIX dir             qtree or UNIX dir
         │   ├── project_C_snap2_clone                      project_C_snap2_clone         /ce_projects/project_C/users/project_C_snap2_clone
         │   ├── project_C_snap3_clone                      ...                           ...
         │   └── project_C_snap4_clone                      project_C_snap4_clone         /ce_projects/project_C/users/project_C_snap4_clone
         │       └── <project contents>                     <cloned version of project files/directories>   
-        ├── jackdaniels
+        ├── jackdaniels                                    ...
         │   ├── project_C_snap2_clone
         │   ├── project_C_snap5_clone
         │   └── project_C_snap6_clone
@@ -33,4 +33,19 @@ ce_projects                                                ce_projects          
             ├── project_C_snap2_clone
             └── project_C_snap3_clone
          
+
+QTREE vs UNIX directories
+   It appears possible to perform a "volume create -volume <vol> -junction_path <path>"
+   which includes directories which don't yet exist.  Example: the users
+   directories like "cptmorgan" are automatically visible when creating the
+   FlexClone when the junction_path is provided.  
+
+   After creating a FlexClone using the junction_path, System Manager will
+   show the project directory "project_A" as a qtree.  
+   System_Manager -> SVM -> "vserver" -> Storage -> Namespace  then click down
+   thru the path. 
+
+
+
+
 
