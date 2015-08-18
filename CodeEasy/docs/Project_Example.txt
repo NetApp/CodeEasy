@@ -5,7 +5,7 @@
 
 
 
-Project Directory Structure (UNIX View)                    Filer Volume/FlexClone        Junction Path
+Project Directory Structure (UNIX View)                    Filer View                    Junction Path
 ===========================                                ===============               =================
 ce_projects                                                ce_projects                   /ce_projects
 ├── project_A                                              project_A (qtree)             /ce_projects/project_A
@@ -17,9 +17,9 @@ ce_projects                                                ce_projects          
     ├── release_builds                                     project_C_release_builds      /ce_projects/project_C/release_builds
     └── users                                              qtree or UNIX dir             qtree or UNIX dir
         ├── cptmorgan                                      qtree or UNIX dir             qtree or UNIX dir
-        │   ├── project_C_snap2_clone                      project_C_snap2_clone         /ce_projects/project_C/users/project_C_snap2_clone
+        │   ├── project_C_snap2_clone                      project_C_snap2_clone         /ce_projects/project_C/users/cptmorgan/project_C_snap2_clone
         │   ├── project_C_snap3_clone                      ...                           ...
-        │   └── project_C_snap4_clone                      project_C_snap4_clone         /ce_projects/project_C/users/project_C_snap4_clone
+        │   └── project_C_snap4_clone                      project_C_snap4_clone         /ce_projects/project_C/users/cptmorgan/project_C_snap4_clone
         │       └── <project contents>                     <cloned version of project files/directories>   
         ├── jackdaniels                                    ...
         │   ├── project_C_snap2_clone
