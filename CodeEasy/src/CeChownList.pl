@@ -66,16 +66,6 @@ our $progname="CeChownList.pl";    # name of this program
 # as this script
 my $fast_chown_exe = "$FindBin::Bin/fast_chown";
 
-# check that fast_chown.pl can be found
-if (! -e $fast_chown_exe) {
-    print "ERROR ($progname): fast_chown program not found\n" .
-          "      Expecting to find $fast_chown_exe\n";
-    exit(1);
-} 
-print "INFO ($progname): Using the following fast_chown executable.\n" .
-      "     $fast_chown_exe\n";
-
-
 # define max parallel threads to use with xargs -p <max threads>
 our $max_thread_count = 140;
 
@@ -86,6 +76,17 @@ our $max_thread_count = 140;
 
 # parse command line inputs
 &parse_cmd_line();
+
+# check that fast_chown.pl can be found - it needs to be compiled
+if (! -e $fast_chown_exe) {
+    print "ERROR ($progname): fast_chown program not found\n" .
+          "      Expecting to find $fast_chown_exe\n";
+    exit(1);
+} 
+print "INFO ($progname): Using the following fast_chown executable.\n" .
+      "     $fast_chown_exe\n" .
+      "      fast_chown must be compiled using the supplied Makefile\n\n";
+
 
 # generate file list
 &chmod_filelist_BOM();
@@ -209,6 +210,18 @@ $progname: Usage Information
 ];
 
     print $helpTxt;
+
+
+    # check that fast_chown.pl can be found - it needs to be compiled
+    if (! -e $fast_chown_exe) {
+	print "ERROR ($progname): fast_chown program not found\n" .
+	      "      Expecting to find $fast_chown_exe\n" .
+	      "      fast_chown must be compiled using the supplied Makefile\n\n";
+	exit(1);
+    } 
+    print "INFO ($progname): Using the following fast_chown executable.\n" .
+	  "     $fast_chown_exe\n";
+
     exit 0;
 
 } # end of sub &show_help()
