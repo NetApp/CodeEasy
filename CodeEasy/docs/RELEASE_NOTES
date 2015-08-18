@@ -2,6 +2,21 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.0.7-Alpha  (release date: 2015-08-18)
+----------------------------------------
+    Added CodeEasy customer presentation in pdf form.  This adds additional 
+    descriptive detail of the flow.
+
+    Added Project_Example.txt to docs which shows the UNIX project directory
+    structure along with the filer volume and junction_path examples.  This
+    should help clarify how junction paths work in the example.
+
+    Improved and update the QUICKSTART guide to clarify filer permission setup
+    and updates example setup.
+
+    Updated to use NMSDK 5.4.
+
+
 CodeEasy_1.0.6-Alpha  (release date: 2015-08-05)
 ----------------------------------------
     Removed references to CE_CLUSTER since all references should just
