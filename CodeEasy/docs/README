@@ -38,3 +38,20 @@ Manageability-SDK
       Perl v5.8.8
 
 
+NetApp Manageability SDK 5.3 - ONTAP 8.3 API Documentation
+----------------------------------------
+Documentation associated with the cDOT command you pass thru the SDK API
+    http://community.netapp.com/t5/Software-Development-Kit-SDK-and-API-Discussions/NetApp-Manageability-SDK-5-3-ONTAP-8-3-API-Documentation/td-p/97533 
+
+Example: 
+    # create clone from parent volume
+    #   my $out = $naserver->invoke("volume-clone-create", "parent-snapshot", $snapshot, 
+    #                                                      "parent-volume",   $volume, 
+    #                                                      "volume",          $clone_name,
+    #                                                      "junction-path",   $junction_path
+
+The above API doc link will provide all the options for things like the
+junction-path, parent-volume, etc.
+
+
+
