@@ -73,6 +73,9 @@ our $temp_dir;
 # define max parallel threads to use 
 our $max_thread_count = 140;
 
+
+
+
 ###################################################################################
 # Start Program
 ###################################################################################
@@ -216,6 +219,16 @@ sub create_filelist_BOM {
     my $temp_filelist_dir = &create_temp_dir();
 
 
+    # check that the find command is found - if not the user needs to edit the
+    # CeInit.pm file to specify the proper path
+    if (! -e $CeInit::CE_CMD_FIND ) {
+	print "ERROR: the UNIX '$CeInit::CE_CMD_FIND' command was not found.\n" .
+	      "       Check the value of CE_CMD_FIND in the CeInit.pm file\n" .
+	      "       Exiting...\n\n";
+	exit 1;
+    }
+
+
     # create sub list of directories but only one level deep
     # -maxdepth 1 => maximum search depth 1 directory
     # -type d     => type directory
@@ -245,6 +258,13 @@ sub create_filelist_BOM {
     my $total_dir_count= $#dir_list;
     printf("INFO  \(%s\): Total Dir = %d\n", $progname, $total_dir_count) if (defined $verbose);
 
+
+    #--------------------------------------- 
+    # find list of files in the top level directory
+    # these are missed in the directory search
+    #--------------------------------------- 
+    my @top_level_files_list = qx($CeInit::CE_CMD_FIND . -maxdepth 1 -type f );
+    chomp(@top_level_files_list);
 
     #--------------------------------------- 
     # find all files in each directory 
@@ -286,7 +306,7 @@ sub create_filelist_BOM {
 
     }
 
-    print "INFO ($progname): All threads completed\n";
+    print "INFO  ($progname): All threads completed\n";
 
     # Accumlating all the fileslist into a single file
     my $cmd = "$CeInit::CE_CMD_FIND $temp_dir -name \*.list";
@@ -303,6 +323,11 @@ sub create_filelist_BOM {
 	      "      Exiting...\n";
 	# exit with clean-up
 	&exit_prog(1);
+    }
+
+    # write out top level files first followed by files found in directories
+    foreach my $top_file (@top_level_files_list) {
+	print FILEOUT "$top_file\n";
     }
 
     # loop thru the a sorted list of the file lists
@@ -401,8 +426,8 @@ sub cleanup_temp_dir {
 
     # remove the temp directory
     if ( system("/bin/rm -fr $temp_dir" ) == 0 ) {
-	print "INFO  ($progname): Temp directory cleaned up successfully.\n" .
-	      "      $temp_dir \n";
+	print "INFO  ($progname): Temp directory cleaned up successfully.\n";
+	print "                   $temp_dir \n" if (defined $verbose);
     } else {
 	print "ERROR ($progname): Temp directory cleaned up failed.\n" .
 	      "      Manually clean-up the temp directory.\n" .
@@ -425,7 +450,7 @@ sub exit_prog {
 	&cleanup_temp_dir();
     }
 
-    print "$progname exiting...\n";
+    print "$progname exiting...\n\n";
 
     exit($exit_code);
 
