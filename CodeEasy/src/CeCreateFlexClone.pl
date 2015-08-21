@@ -293,17 +293,20 @@ sub clone_create {
 
     # create user path directory - this directory must exist for the lower
     # level mount to attach correctly. 
-    my $cmd = "/bin/mkdir -p $UNIX_mount_path";
-
-    if ( system ($cmd) == 0) {
-	print "DEBUG ($progname): Created UNIX mount point for new FlexClone at $UNIX_mount_path\n" if ($verbose);
-    } else {
-	print "ERROR ($progname): Could not create UNIX mount point for new FlexClone at $UNIX_mount_path\n" .
-	      "       Check that the UNIX path and permissions exist.\n" .
-	      "       $cmd\n" .
-	      "Exiting...\n";
-	exit 1;
-    }
+    # NOTE: NetApp filer junction_paths should take care of completing any
+    # missing paths if setup correctly.  But in some cases, it might be
+    # necessary to first create the full path.
+#   my $cmd = "/bin/mkdir -p $UNIX_mount_path";
+#
+#   if ( system ($cmd) == 0) {
+#       print "DEBUG ($progname): Created UNIX mount point for new FlexClone at $UNIX_mount_path\n" if ($verbose);
+#   } else {
+#       print "ERROR ($progname): Could not create UNIX mount point for new FlexClone at $UNIX_mount_path\n" .
+#             "       Check that the UNIX path and permissions exist.\n" .
+#             "       $cmd\n" .
+#             "Exiting...\n";
+#       exit 1;
+#   }
 
 
     #--------------------------------------- 

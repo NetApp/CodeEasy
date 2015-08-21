@@ -79,7 +79,7 @@ package CeInit;
     # misc UNIX tool paths 
     #    this may need to be modified based on customer environment
     #---------------------------------------- 
-    our $CE_CMD_FIND   = "/usr/bin/find";
+    our $CE_CMD_FIND   = "/bin/find";
     our $CE_CMD_XARGS  = "/usr/bin/xargs";
 
     # sur script for handling permission changes etc.  

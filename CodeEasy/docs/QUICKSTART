@@ -149,7 +149,16 @@
 	%> sudo mount -t nfs vserver:/ce_projects /ce_projects
 
 
-    Step #1B: Compile sur and fast_chown scripts
+    Step #1B: Setup 'sudo' permission for trusted users - like devops
+        As root use the 'visudo' command to edit the sudo permission.
+
+	Add the following line - then exit.  
+	    # add sudo permissions for user 'devlops'
+	    # this will enable user to run gcc, chmod and rm as root on ALL machines.
+	    devops  ALL=/usr/bin/gcc, /bin/chmod, /bin/rm
+	
+
+    Step #1C: Compile sur and fast_chown scripts
 	This step requires sudo previleges - which in this case user 'devops' has
 	sudu permissions setup to perform various operations - which needs to be
 	detailed (TBD). These scripts can also be compiled as root if needed.

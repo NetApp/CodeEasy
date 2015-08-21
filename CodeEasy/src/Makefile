@@ -45,5 +45,5 @@ fast_chown: fast_chown.c
 
 # clean or remove prior builds 
 clean:
-	rm -rf sur fast_chown
+	sudo rm -f sur fast_chown
 
