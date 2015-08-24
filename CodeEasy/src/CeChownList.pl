@@ -295,9 +295,12 @@ sub chmod_filelist_BOM {
     # as many files and directories as it can at a time - xargs will then run
     # the 'fast_chown' script
     #  %> fast_chown <username> <file1...filen>
-    #my $cmd = "/bin/cat $filelist_BOM \| /usr/bin/xargs -P $max_thread_count $fast_chown_exe $username ";
-    my $cmd = "/bin/cat $filelist_BOM \| /usr/bin/xargs -P $max_thread_count /bin/chown $username ";
-    print "INFO: Running fast_chown\n" .
+    my $cmd = "/bin/cat $filelist_BOM \| sudo /usr/bin/xargs -P $max_thread_count $fast_chown_exe $username ";
+
+    # OR use the standard UNIX chown command - this is a little slower
+    #my $cmd = "/bin/cat $filelist_BOM \| sudo /usr/bin/xargs -P $max_thread_count /bin/chown $username ";
+
+    print "INFO: Running chown\n" .
           "      $cmd\n";
     system($cmd);
 

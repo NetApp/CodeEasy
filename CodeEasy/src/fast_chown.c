@@ -79,7 +79,7 @@ int main(
 
 	// apply the uid - and optionally report conversion of uname to uid values
         uid = pwd->pw_uid;
-	fprintf(stdout, "INFO (%s): Username '%s' converted to UID '%d' \n", argv[0], argv[1], uid);
+//	fprintf(stdout, "DEBUG (%s): Username '%s' converted to UID '%d' \n", argv[0], argv[1], uid);
     }
 
     // loop thru each file passed on the command line
