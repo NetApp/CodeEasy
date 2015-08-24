@@ -327,20 +327,21 @@ sub create_filelist_BOM {
 
     # write out top level files first followed by files found in directories
     foreach my $top_file (@top_level_files_list) {
-	print FILEOUT "$top_file\n";
+        chomp $top_file;
+	# adding quotes "" just incase of Windows type file names which include spaces
+	print FILEOUT "\"$top_file\"\n";
     }
 
     # loop thru the a sorted list of the file lists
     @ARGV = (sort split '^', $list_filelists);
     #foreach my $file (sort split '^', $list_filelists) {
     while (<>) {
-	print FILEOUT;
+	chomp;
+	# adding quotes "" just incase of Windows type file names which include spaces
+	print FILEOUT "\"$_\"\n";
     }
     # close the fileout
     close FILEOUT;
-
-    # exit with clean-up
-    &exit_prog(1);
 
 } # end of sub &create_filelist_BOM()
 
@@ -450,7 +451,7 @@ sub exit_prog {
 	&cleanup_temp_dir();
     }
 
-    print "$progname exiting...\n\n";
+    print "INFO:  $progname exiting...\n\n";
 
     exit($exit_code);
 

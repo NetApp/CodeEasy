@@ -2,6 +2,30 @@
 # CodeEasy QuickStart Guide
 ################################################################################
 
+****************************************
+   Introduction 
+****************************************
+The challenge for developers who work with large volumes of data such as multimedia assets, video game art, and firmware designs, etc, is the ability to get a quick copy of source and build assets. By combining the technologies of Perforce and NetApp, a new Perforce workspace can be created in minutes instead of hours.  Perforce in collaboration with NetApp has developed a p4 broker script written in python that allows users to create workspaces quickly using NetApp FlexClone technology.
+ 
+****************************************
+  Scope 
+****************************************
+The CodeEasy Eval Kit scripts are an open-source shared with the developer community to refine and customized. Each development environment is unique and may have requirements of security, control, workflow, etc. Thus this script is meant to be only as a starting reference which can be enhanced to support requirements of your specific development environment.
+
+Support for this script is through the NetApp community forums. Questions and issues should be posted there for further guidance.  
+
+****************************************
+  Requirements  
+****************************************
+In order to be able to utilize CodeEasy Eval Kit the following is required:
+
+- cDot 8.2 or later (7-mode is not supported)
+- NetApp Manageability Software Development Kit (NMSDK) 5.3.x or later
+
+****************************************
+  Support 
+****************************************
+Currently the CodeEasy EvalKit is only supported for Unix environments and NFS.
 
 ****************************************
   Installation
@@ -24,7 +48,7 @@
     The final directory structure should look something like.
     <workspace>/
     	netapp-manageability-sdk-5.4/
-	CodeEasy_1.0.0-Alpha/
+	CodeEasy_1.x.x-Alpha/
 
     The CodeEasy Perl scripts assume the SDK is at the same level as the eval
     kit.  This can be change by editing the .pl script if a different location
@@ -35,6 +59,26 @@
     =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
     Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
     
+
+****************************************
+  Setup sudo for user 'devops'
+****************************************
+    User 'devops' or similar user is the user who will own the master volume
+    which gets cloned by users.  The 'devops' user or equivalent will need
+    permissions to change the ownership 'chown' the files in the cloned
+    volume.  
+
+    Setup 'sudo' permission for trusted users - like devops
+    As root use the 'visudo' command to edit the sudo permission.
+
+    Add the following line - then exit.  
+	# add sudo permissions for user 'devlops'
+	# this will enable user to run command without requiring a password.
+	devops  ALL=(ALL)       NOPASSWD: ALL
+
+    NOTE: there might be more restrictive sudo settings.  For simplicity
+    the above setting allow full sudo access.
+
 
 ****************************************
   ONTAPI filer permission setup
@@ -54,7 +98,6 @@
         cluster::> security login show
 
 
-
 ****************************************
   Setup Project Volumes
 ****************************************
@@ -70,15 +113,15 @@
                                 -security-style unix -unix-permissions ---rwxrwxrwx <other options>
 
     Step #2 NFS mount top level project volume (or edit /etc/fstab or update automount)
+       New volumes and flexclones will use junction paths relative to this mount point. 
 
        UNIX %> sudo mount -t nfs vserver:/ce_projects /ce_projects
+
+       Change permissions so users can access this volume
+            %> sudo chmod 777 /ce_projects
             %> cd /ce_projects
             %> ls 
 
-    Step #3 Create project volume - project_A
-
-       vserver::> volume create -volume project_A -junction_path /ce_projects/project_A -policy codeeasy_exports \
-                                -security-style unix -unix-permissions ---rwxrwxrwx <other options>
 
     Step #4 Create continuous build area (jenkin) volume
        NOTE: the volume and junction_path names are different.  The volume name will be unique in the case there is a project_B_jenkin_build volume.
@@ -133,13 +176,11 @@
 ****************************************
 
     Login as user 'devops'
-	%> sudo su - devops
-
+	%> su - devops
 
     ----------------------------------------
     Setup Steps
     ----------------------------------------
-
     Step #1A: Mount Junction Path
 	      New volumes and flexclones will use junction paths relative to
 	      this mount point. 
@@ -148,17 +189,11 @@
 
 	%> sudo mount -t nfs vserver:/ce_projects /ce_projects
 
+        change permissions so users can access this volume
+        %> sudo chmod 777 /ce_projects
 
-    Step #1B: Setup 'sudo' permission for trusted users - like devops
-        As root use the 'visudo' command to edit the sudo permission.
 
-	Add the following line - then exit.  
-	    # add sudo permissions for user 'devlops'
-	    # this will enable user to run gcc, chmod and rm as root on ALL machines.
-	    devops  ALL=/usr/bin/gcc, /bin/chmod, /bin/rm
-	
-
-    Step #1C: Compile sur and fast_chown scripts
+    Step #1B: Compile sur and fast_chown scripts
 	This step requires sudo previleges - which in this case user 'devops' has
 	sudu permissions setup to perform various operations - which needs to be
 	detailed (TBD). These scripts can also be compiled as root if needed.
@@ -174,11 +209,10 @@
     ----------------------------------------
     Continuous Integration Flow Steps
     ----------------------------------------
-
     Step #2: Create new volume (*** SKIP THIS STEP IF YOUR VOLUME ALREADY EXISTS ***)
-	%> ./CeCreateVolume.pl -vol nightly_builds
+	%> ./CeCreateVolume.pl -vol jenkins_build
 
-	This will create a volume which is automatically mounted at /home/mj_perforce/mnt/daemon/ce_test_daemon
+	This will create a volume which is automatically mounted at /ce_projects/project_A/jenkin_build 
 	because we specified a junction-path, user_id, group_id, and unix-permissions with the volume-create
 	command, the new volume is mounted and permission set ready to go.
 
@@ -209,16 +243,14 @@
 	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
 
 
-
 ****************************************
   Developer (aka normal user) Flow Steps
 ****************************************
-
     Switch back to normal user
 	%> exit     (if logged in as devops)
 
 
-    Step #6: Create a FlexClone based on the Snapshot created in step #5
+    Step #1: Create a FlexClone based on the Snapshot created in step #5
 
 	%> ./CeCreateFlexClone.pl  -snapshot project_A_snap_20150811 -clone project_A_snap_20150811_clone
 
@@ -228,14 +260,14 @@
 
 	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
 
-    Step #7: Change ownership of the FlexClone volume to that of the current user
+    Step #2: Change ownership of the FlexClone volume to that of the current user
 
-	%> ./sur ./CeChownList.pl devops -d /ce_projects/project_A/users/<USER>/project_A_snap_20150811_clone -u ubuntu
+	%> ./sur ./CeChownList.pl devops -d /ce_projects/project_A/users/<USER>/project_A_snap_20150811_clone -u jmichae1
 
 	The FlexClone volume should now have the permission of the normal
-	users - in this case user 'ubuntu'.  
+	users - in this case user 'jmichae1'.  
 
-    Step #8: Update Source Control setup
+    Step #3: Update Source Control setup
 	Since this example does not use Perforce, SVN, GiT or CVS there is
 	nothing to do.  
 

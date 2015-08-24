@@ -41,6 +41,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 #include <stdio.h>
 
 int main(
@@ -51,6 +53,7 @@ int main(
     uid_t uid;
     struct passwd *pwd;
     char *endptr;
+
 
     if (argc < 3 ) {
         fprintf(stderr, "\nERROR (%s): Invalid number of arguments.\n",       argv[0]);
@@ -87,12 +90,13 @@ int main(
 
 	// uncomment to perform error checking on lchown operations
 	// this extra checking maybe noisy and run slower
-	/*
+	///*
         if (   lchown(argv[ix], uid, -1) == -1) {
-            fprintf(stderr, "\nERROR (%s): lchown %s %i failed.\n", argv[0], argv[ix], uid);
+            fprintf(stderr, "\nERROR (%s): lchown %s %i failed. \n", argv[0], argv[ix], uid);
+            fprintf(stderr, "errno=%s\n", strerror(errno));
             // exit(EXIT_FAILURE);
         }
-	*/
+	//*/
 	
     }
     return 0;

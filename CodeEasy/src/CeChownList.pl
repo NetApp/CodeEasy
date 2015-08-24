@@ -55,6 +55,7 @@ my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
 
 # command line argument values
 our $root_directory;                 # full path of the top level directory to scan
+our $gen_filelist;                   # generate filelist_BOM cmd line arg
 our $filelist_BOM;                   # name of filelist to generate
 our $filelist_BOM_defaultname = "filelist_BOM";  # default filefile name
 our $username;                       # username for chown operation
@@ -84,9 +85,18 @@ if (! -e $fast_chown_exe) {
     exit(1);
 } 
 print "INFO ($progname): Using the following fast_chown executable.\n" .
-      "     $fast_chown_exe\n" .
-      "      fast_chown must be compiled using the supplied Makefile\n\n";
+      "     $fast_chown_exe\n\n";
 
+# for optimization purposes only show who is running this process with verbose option
+if (defined $verbose) {
+    my $whoami = `whoami`;
+    chomp $whoami;
+    print "INFO:  Script running as user <$whoami>\n";
+}
+
+
+# generate filelist_BOM 
+&gen_filelist_BOM if (defined $gen_filelist);
 
 # generate file list
 &chmod_filelist_BOM();
@@ -110,6 +120,7 @@ sub parse_cmd_line {
   # parse command line 
   GetOptions ("h|help"        => sub { &show_help() },   
               'd|directory=s' => \$root_directory,       # root directory to use (full path)
+	      'g|gen_file'    => \$gen_filelist,             # gen file BOM file list
 	      'f|filelist=s'  => \$filelist_BOM,         # name of filelist to read
 	      'u|user=s'      => \$username,             # username for chown operation
               'v|verbose'     => \$verbose,              # increase output verbosity
@@ -195,6 +206,8 @@ $progname: Usage Information
 
       -d|-directory <directory name>  : root directory to chmod
 
+      -g|-gen_file                    : generate filelist_BOM before running chown
+
       -f|-filelist  <filelist name>   : name of the filelist to read
                                         default=<directory name>/filelist_BOM
                                         (optional) 
@@ -226,7 +239,37 @@ $progname: Usage Information
 
 } # end of sub &show_help()
 
+########################################
+# generate filelist BOM
+# essentially call CeFileListGen.pl before running chmod
+########################################
+sub gen_filelist_BOM {
 
+    my $cmd = "$FindBin::Bin/CeFileListGen.pl";
+
+    # check that the file list generator script is found 
+    if (! -e  "$cmd") {
+	print "ERROR: $cmd not found. \n";
+	exit 1;
+    }
+
+    # generate filelist_BOM
+    $cmd = "$cmd -d $root_directory";
+    print "INFO:  Generating file list BOM\n" .
+          "       $cmd\n";
+
+    if (system($cmd) == 0) {
+	print "INFO:  Successfully generated file list BOM\n";
+    } else {
+	print "ERROR: Generated file list BOM failed\n" .
+	      "       $cmd\n" .
+	      "Exiting...\n";
+	exit 1;
+    }
+
+exit 0;
+
+} # end of sub &gen_filelist_BOM
 
 ########################################
 # chmod_filelist_BOM
@@ -248,11 +291,14 @@ sub chmod_filelist_BOM {
     # $max_thread_count variable set at the top of this script controls how
     # many parallel threads xargs launches.  
 
-    # dump the content of the filelist into xargs to take care of processing
+    # dump the content ofthe filelist into xargs to take care of processing
     # as many files and directories as it can at a time - xargs will then run
     # the 'fast_chown' script
     #  %> fast_chown <username> <file1...filen>
-    my $cmd = "/bin/cat $filelist_BOM \| /usr/bin/xargs -P $max_thread_count $fast_chown_exe $username ";
+    #my $cmd = "/bin/cat $filelist_BOM \| /usr/bin/xargs -P $max_thread_count $fast_chown_exe $username ";
+    my $cmd = "/bin/cat $filelist_BOM \| /usr/bin/xargs -P $max_thread_count /bin/chown $username ";
+    print "INFO: Running fast_chown\n" .
+          "      $cmd\n";
     system($cmd);
 
 } # end of sub &chmod_filelist_BOM()

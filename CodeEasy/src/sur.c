@@ -53,15 +53,15 @@ main (int argc, char ** argv) {
     // check that minimum number of command line arguments were passed
     if (argc <= 3) {
         fprintf(stderr, "\nERROR (%s): Invalid number of arguments.\n",       argv[0]);
-	fprintf(stderr,   "        Usage:  \%> %s <sur_dispatch cmd> <username> <cmdline to execute>\n\n", argv[0]);
-	fprintf(stderr,   "      Example:  \%> %s /codeeasy_path/bin/sur_dispatch builduser  'CeCreateClone ProjA_snapshot_nightly101' \n", argv[0]);
-	fprintf(stderr,   "                will perform the equivalent of \%> chown builduser:<unchanged> file1 file2 file3\n\n");     
+	fprintf(stderr,   "        Usage:  \%> %s <username> <sur_dispatch cmd>  <cmdline to execute>\n\n", argv[0]);
+	fprintf(stderr,   "      Example:  \%> %s /codeeasy_path/bin/sur devops 'CeChownList.pl -d <dir> -u <user> ' \n", argv[0]);
+	fprintf(stderr,   "                will perform the equivalent of \%> chown <user>:<unchanged> file1 file2 file3\n\n");     
 	exit(1);
     }
 
     // capture command line values 
-    sur_dispatch_exe = argv[1];  
-    suser            = argv[2];
+    suser            = argv[1];
+    sur_dispatch_exe = argv[2];  
 
     //-------------------------------------- 
     // determine new user id and then switch process id
@@ -130,6 +130,8 @@ main (int argc, char ** argv) {
 
     }
 
+    fprintf(stdout, "DEBUG: MJ is awesome!\n");
+	exit(1);
 
 } 
 
