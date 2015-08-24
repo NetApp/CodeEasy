@@ -2,11 +2,16 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
-CodeEasy_1.0.8-Alpha  (release date: 2015-08-18)
+CodeEasy_1.0.8-Alpha  (release date: 2015-08-24)
 ----------------------------------------
     Corrected Project_Example.txt example.
 
     Added missing presentation PDF.
+
+    Updated and improved sur.c, fast_chown.c and CeChownList.pl scripts.
+
+    Significant re-write of QUICKSTART guide to clarify sudo requirements and
+    to improve organization of the described flow.
 
 
 

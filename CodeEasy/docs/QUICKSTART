@@ -72,7 +72,7 @@ Currently the CodeEasy EvalKit is only supported for Unix environments and NFS.
     As root use the 'visudo' command to edit the sudo permission.
 
     Add the following line - then exit.  
-	# add sudo permissions for user 'devlops'
+	# add sudo permissions for user 'devops'
 	# this will enable user to run command without requiring a password.
 	devops  ALL=(ALL)       NOPASSWD: ALL
 
