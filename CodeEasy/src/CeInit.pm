@@ -39,6 +39,10 @@ package CeInit;
     # default volume name - is the default used by CeCreateSnapshot and CeCreateFlexClone
     our $CE_DEFAULT_VOLUME_NAME    = "project_A_jenkin_build";
 
+    # user who owns the master volume and has sudo permissions to chown clones
+    # and run filer commands
+    our $CE_DEVOPS_USER = "devops";
+
 
     # Storage Mount Points
     # root of the junction path 
@@ -117,17 +121,16 @@ package CeInit;
 
     # OPTIONAL options for volume-create (as found in CeCreateVolume.pl)
     #          add or remove option pairs as needed.  
-    our @CE_VOLUME_CREATE_OPTIONS  = ("size",                 '3000g',
-                                      "unix-permissions",     '777',
-                                      "export-policy",        'codeeasy_exports',
-                                      "snapshot-policy",      'default',
-                                      "user-id",              $user_id, 
-                                      "group-id",             $group_id,
-                                      "space-reserve",        'none'
+    our @CE_VOLUME_CREATE_OPTIONS  = ("size",                  '3000g',
+                                      "unix-permissions",      '777',
+                                      "export-policy",         'codeeasy_exports',
+                                      "snapshot-policy",       'default',
+                                      "user-id",               $user_id, 
+                                      "group-id",              $group_id,
+                                      "space-reserve",         'none',
+				      "volume-security-style", 'unit'
 				      );
                                                      
-                                      # "security-style",       'unix',
-
 
 
 ########################################
@@ -137,6 +140,7 @@ our @EXPORT = qw(@CE_ADMIN_USER$
                  $CE_VSERVER 
 		 $CE_STYLE
                  $CE_TRANSPORT_TYPE $CE_PORT
+                 $CE_DEVOPS_USER
 		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH 
                  $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS
 		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS

@@ -104,8 +104,9 @@ main (int argc, char ** argv) {
     // execute command with new uid
     //-------------------------------------- 
     // show command line which will launch via execv
-    fprintf(stdout, "INFO  (%s): execv command.\n", argv[0]);
-    fprintf(stdout, "      (user=%s) \%> %s", suser, sur_dispatch_exe);
+//fprintf(stdout, "INFO  (%s): execv command.\n", argv[0]);
+//    fprintf(stdout, "      (user=%s) \%> %s", suser, sur_dispatch_exe);
+    fprintf(stdout, "INFO  (%s): Executing as user=%s \%> %s ", argv[0], suser, sur_dispatch_exe);
     
     // loop thru each file passed on the command line
     for(ix=3; argv[ix]; ix++) {
@@ -124,14 +125,21 @@ main (int argc, char ** argv) {
     if (execv (sur_dispatch_exe, &argv[2]) == -1) {
 	fprintf(stderr, "ERROR (%s): execv command failed.\n", argv[0]);
 
+	fprintf(stderr, "ERROR (%s): System call command failed.   \%> %s ", argv[0], sur_dispatch_exe);
+	// loop thru each file passed on the command line
+	for(ix=3; argv[ix]; ix++) {
+	    fprintf(stdout, " %s", argv[ix]);
+	}
+	fprintf(stdout, "\n");
+	fprintf(stdout, "Exiting...\n");
+
 	// exit on error
 	exit (1);
     } else {
-
+	fprintf(stdout, "INFO  (%s): sur_dispatch_exe completed successfully.\n", argv[0], sur_dispatch_exe);
     }
 
-    fprintf(stdout, "DEBUG: MJ is awesome!\n");
-	exit(1);
+    exit(1);
 
 } 
 

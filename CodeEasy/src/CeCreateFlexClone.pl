@@ -39,10 +39,6 @@ use warnings;
 # load NetApp manageability SDK APIs
 #   --> this is done in the CeCommon.pm package
 
-# load CodeEasy packages
-use lib "$FindBin::Bin/.";
-use CeInit;        # contains CodeEasy script setup values
-use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 
 
 ############################################################
@@ -63,8 +59,11 @@ our $volume_delete;                # cmdline arg: remove flexclone volume
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
-my $MAX_RECORDS = 200;
 
+# load CodeEasy packages
+use lib "$FindBin::Bin/.";
+use CeInit;        # contains CodeEasy script setup values
+use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 
 ############################################################
 # Start Program
@@ -92,15 +91,28 @@ exit 0    if (defined $test_only);
 
 #--------------------------------------- 
 # create flexclone
-#    flexclone volume is created by default - unless -remove is specified
 #--------------------------------------- 
-&clone_create($volume, $snapshot_name, $clone_name ) if (! defined $volume_delete);
+if (! defined $volume_delete) {
+    #--------------------------------------- 
+    # create flexclone
+    #    flexclone volume is created by default - unless -remove is specified
+    #--------------------------------------- 
+    #&clone_create($volume, $snapshot_name, $clone_name ) 
 
+    #--------------------------------------- 
+    # change permission of clone from the original snapshot owner
+    # to the current user.
+    #--------------------------------------- 
+    # NOTE: not yet implemented here
+    &chown_clone();
+}
 
 #--------------------------------------- 
 # remove volume (NOTE: removing a FlexClone is identical to removing a volume)
 #--------------------------------------- 
-&remove_volume() if ($volume_delete);
+if ($volume_delete) {
+    &remove_volume(); 
+}
 
 
 # exit program successfully
@@ -151,7 +163,7 @@ sub parse_cmd_line {
 	# no volume passed on the command line or set in the CeInit.pm file
 	print "ERROR ($progname): No volume name provided.\n" .
 	      "      use the -vol <volume name> option on the command line.\n" .
-	      "      Exiting...\n";
+	      "      Exiting...\n\n";
 	exit 1;
     }
 
@@ -159,7 +171,7 @@ sub parse_cmd_line {
     if (! defined $snapshot_name) {
 	print "ERROR ($progname): No SnapShot name provided.\n" .
 	      "      Use the -snapshot <snap_name> option.\n" .
-	      "Exiting...\n";
+	      "Exiting...\n\n";
 	exit 1;
 
     }
@@ -168,7 +180,7 @@ sub parse_cmd_line {
     if (! defined $clone_name) {
 	print "ERROR ($progname): No FlexClone name provided.\n" .
 	      "      Use the -clone <flexclone name> option.\n" .
-	      "Exiting...\n";
+	      "Exiting...\n\n";
 	exit 1;
 
     }
@@ -337,6 +349,57 @@ sub clone_create {
                   
 
     #--------------------------------------- 
+    # check that the volume already exists - if not error
+    #--------------------------------------- 
+    # get list of volumes from the vserver
+    my %volume_list = &CeCommon::getVolumeList($naserver);
+
+    # check that the volume to clone is in the list of volumes available
+    if (defined $volume_list{$volume} ) {
+	# the master volume must exist to clone 
+	print "DEBUG: Volume '$volume' to clone exists\n" if ($verbose);
+    } else {
+        # if not, then generate an error
+	print "ERROR: Volume to clone does not exist.\n" .
+	      "       Check that volume '$volume' exists and has a valid snapshot.\n" .
+	      "       Exiting...\n\n";
+	exit 1;
+    }
+
+    #--------------------------------------- 
+    # check flexclone already exists - if so error
+    #--------------------------------------- 
+    # get list of flexclones from the vserver
+    my %clone_list = &CeCommon::getFlexCloneList($naserver);
+
+    # check that the clone does not already exist
+    if (defined $clone_list{$flexclone_vol_name} ) {
+	# the flexclone already exists - error
+	print "ERROR: The FlexClone '$flexclone_vol_name' already exists.\n" .
+	      "       FlexClone names must be unique.\n" .
+	      "       Exiting...\n\n";
+	exit 1;
+    } else {
+	print "DEBUG: FlexClone does not yet exists\n" if ($verbose);
+    }
+
+    #--------------------------------------- 
+    # check that the snapshot exists - if not error
+    #--------------------------------------- 
+    # determine the full UNIX path to the parent snapshot
+    my $snapshot_path = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$parent_snapshot";
+    if (-e $snapshot_path) {
+	print "DEBUG: Snapshot '$parent_snapshot' exists.\n" if ($verbose);
+    } else {
+	print "ERROR: Snapshot '$parent_snapshot' does not exist.\n" .
+	      "       List the available snapshots to clone using the '%> $progname -ls' command.\n" .
+	      "Exiting...\n\n";
+	exit 1;
+    }
+
+
+
+    #--------------------------------------- 
     # create flexclone
     #--------------------------------------- 
     $out = $naserver->invoke("volume-clone-create", "parent-volume",   $volume, 
@@ -351,22 +414,21 @@ sub clone_create {
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
+	# user friendly error message
+	print "ERROR ($progname): Unable to create FlexClone '$flexclone_vol_name'\n"; 
+	# verbose debug
         print "ERROR ($progname): Unable to volume-clone-create snapshot $parent_snapshot \n";
         print "ERROR ($progname): volume-clone-create returned with $errno reason: " . 
-	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
+	                          '"' . $out->results_reason() . "\n" if ($verbose);
+        print "ERROR ($progname): Exiting with error.\n\n";
+
         exit 1;
     }
     print "INFO ($progname): FlexClone <$clone_name> successfully created and mounted\n" .
           "                  at UNIX path <$UNIX_clone_path>\n";
 
 
-    #--------------------------------------- 
-    # change permission of clone from the original snapshot owner
-    # to the current user.
-    #--------------------------------------- 
-    # NOTE: not yet implemented here
-    &chown_clone();
+
 
 } # end of sub clone_create()
 
@@ -377,6 +439,27 @@ sub clone_create {
 ###################################################################################
 sub chown_clone {
 
+    # determine user running this script
+    my $username = getpwuid( $< ); chomp $username;
+
+    # the new FlexClone will be mounted at the UNIX_mount_path 
+    my $UNIX_mount_path     = "$CeInit::CE_UNIX_USER_FLEXCLONE_PATH/$username";
+
+    # the FlexClone's junction_path will have a corresponding path to the
+    # UNIX_clone_path - if done correctly, the FlexClone will be automounted
+    # automatically by the filer.
+    my $UNIX_clone_path     = "$UNIX_mount_path/$clone_name";
+
+    # command for running the chown command
+    my $cmd     = "$FindBin::Bin/CeChownList.pl -d $UNIX_clone_path -u $username";
+
+    # sur: the sur command will change user to the <build user> and then run
+    # the cammand which follows as that person.
+    #                            sur <build user>            <command to run>
+    my $sur_cmd = "$FindBin::Bin/sur $CeInit::CE_DEVOPS_USER $cmd";
+
+    print "DEBUG: Command to run CeChownList.pl\n" .
+          "       $sur_cmd\n";
 
 } # end of sub &chown_clone();
 
@@ -396,6 +479,25 @@ sub remove_volume {
           "      flexclone volume name = $flexclone_vol_name\n\n";
 
     #--------------------------------------- 
+    # check flexclone already exists - if not error
+    #--------------------------------------- 
+    # get list of flexclones from the vserver
+    my %clone_list = &CeCommon::getFlexCloneList($naserver);
+
+    # check that the clone does not already exist
+    if (! defined $clone_list{$flexclone_vol_name} ) {
+	# the flexclone does not exists - error
+	print "ERROR: The FlexClone '$flexclone_vol_name' does not exists.\n" .
+	      "       Check the list FlexClone report to see if it exists.\n" .
+	      "       %> $progname -lc \n" .
+	      "       Exiting...\n\n";
+	exit 1;
+    } else {
+	print "DEBUG: FlexClone '$flexclone_vol_name' exists and will be removed.\n" if ($verbose);
+    }
+
+
+    #--------------------------------------- 
     # first make sure the volume is unmounted
     #--------------------------------------- 
     $out = $naserver->invoke("volume-unmount",  "volume-name", $flexclone_vol_name);
@@ -406,7 +508,7 @@ sub remove_volume {
         print "ERROR ($progname): Unable to unmount FlexClone volume $clone_name\n";
         print "ERROR ($progname): volume-unmount returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
+        print "ERROR ($progname): Exiting with error.\n\n";
         exit 1;
     }
     print "INFO  ($progname): Flexclone volume <$flexclone_vol_name> successfully unmounted.\n";
@@ -422,7 +524,7 @@ sub remove_volume {
         print "ERROR ($progname): Unable to take FlexClone volume $clone_name offline\n";
         print "ERROR ($progname): volume-offline returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
+        print "ERROR ($progname): Exiting with error.\n\n";
         exit 1;
     }
     print "INFO  ($progname): FlexClone volume <$clone_name> successfully taken offline.\n";
@@ -438,7 +540,7 @@ sub remove_volume {
         print "ERROR ($progname): Unable to remove/destroy FlexClone volume $clone_name \n";
         print "ERROR ($progname): volume-destroy returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
-        print "ERROR ($progname): Exiting with error.\n";
+        print "ERROR ($progname): Exiting with error.\n\n";
         exit 1;
     }
     print "INFO  ($progname): FlexClone volume <$clone_name> successfully removed.\n";
@@ -462,7 +564,7 @@ sub list_flexclones {
     my %vol_dedup_saved;
     my %vol_dedup_shared;
 
-    my @vlist = vGetcDOTList( $naserver, "volume-get-iter" );
+    my @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-get-iter" );
 
     foreach my $tattr ( @vlist ) {
 	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
@@ -508,7 +610,7 @@ sub list_flexclones {
     }
 
     # get volume clone info iteratively - it will return a list
-    @vlist = vGetcDOTList( $naserver, "volume-clone-get-iter" );
+    @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-clone-get-iter" );
 
     print "\nList FlexClones\n";
 	    #123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 
@@ -587,65 +689,4 @@ sub list_flexclones {
 
 } # end of sub &list_flexclones()
 
-#
-# Name: vGetcDOTList()
-# Func: Note that Perl is a lot more forgiving with long object lists than ONTAP is.  As a result,
-#	  we have the luxury of returning the entire set of objects back to the caller.  Get all the
-#	  objects rather than waiting.
-#
-sub vGetcDOTList {
-    my ( $zapiServer, $zapiCall, @optArray ) = @_;
-    my @list;
-    my $done = 0;
-    my $tag  = 0;
-    my $zapi_results;
-
-    # loop thru calling the command until all tags are processed
-    while ( !$done ) {
-
-	print "Attempting to collect " . ( $tag ? "more " : "" ) . "API results for $zapiCall from vserver ...\n" if ($verbose);
-
-	# if a tag exists, pass it to the zapi command
-	if ( $tag ) {
-	    if ( @optArray ) {
-		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS, @optArray );
-	    } else {
-		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS );
-	    }
-	} else {
-	    # not tag exists - probably the first time the command is called
-	    if ( @optArray ) {
-		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS, @optArray );
-	    } else {
-		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS );
-	    }
-	}
-
-	# check status of the call
-	if ( $zapi_results->results_status() eq "failed" ) {
-	    print "ERROR: ONTAP API call $zapiCall failed: " . $zapi_results->results_reason() . "\n";
-	    return( 0 );
-	}
-
-	# get next tag (if multiple queries are required to get large lists
-	$tag = $zapi_results->child_get_string( "next-tag" );
-
-	my $list_attrs = $zapi_results->child_get( "attributes-list" );
-	if ( $list_attrs ) {
-	    my @list_items = $list_attrs->children_get();
-	    if ( @list_items ) {
-		push( @list, @list_items );
-	    }
-	}
-
-	# if no tags are left, then exit the while loop
-	if ( !$tag ) {
-	    $done = 1;
-	}
-    }
-
-    # return list to calling sub
-    return( @list );
-
-} # end of sub vGetcDOTList()
 

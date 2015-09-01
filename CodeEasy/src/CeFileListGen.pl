@@ -263,7 +263,7 @@ sub create_filelist_BOM {
     # find list of files in the top level directory
     # these are missed in the directory search
     #--------------------------------------- 
-    my @top_level_files_list = qx($CeInit::CE_CMD_FIND . -maxdepth 1 -type f );
+    my @top_level_files_list = qx($CeInit::CE_CMD_FIND $root_directory -maxdepth 1 -type f );
     chomp(@top_level_files_list);
 
     #--------------------------------------- 

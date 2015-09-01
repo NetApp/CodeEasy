@@ -50,9 +50,6 @@ use constant TRUE  => 1;
 use constant FALSE => 0;
 
 
-# determine date
-my $date = `date`; chomp $date; $date =~ s/\s+/ /g;
-
 # command line argument values
 our $root_directory;                 # full path of the top level directory to scan
 our $gen_filelist;                   # generate filelist_BOM cmd line arg
@@ -116,6 +113,7 @@ exit(0);
 ########################################
 
 sub parse_cmd_line {
+print "ARGV = @ARGV\n";
 
   # parse command line 
   GetOptions ("h|help"        => sub { &show_help() },   
@@ -147,9 +145,10 @@ sub parse_cmd_line {
 	print "INFO  ($progname): Preparing to chmod root directory\n" .
 	      "      $root_directory\n" if (defined $verbose);
     } else {
-	print "ERROR ($progname): Directory does not exist.\n" .
-	      "      check that the directory is a full UNIX path and exists.\n" .
-	      "      Exiting...\n";
+	print "\nERROR ($progname): Directory $root_directory does not exist.\n" .
+	        "      Check that the directory is a full UNIX path and exists.\n" .
+	        "      Exiting...\n\n";
+	exit 1;
     }
 
     # check that at least one of the actions has been selected
@@ -160,24 +159,24 @@ sub parse_cmd_line {
 
     # check that the filelist actually exists
     if (! -e $filelist_BOM ) {
-	print "ERROR ($progname): Filelist not found. Check file passed on the command line.\n" .
-	      "      $filelist_BOM\n" .
-	      "      Exiting...\n\n";
+	print "\nERROR ($progname): Filelist not found. Check file passed on the command line.\n" .
+	        "      $filelist_BOM\n" .
+	        "      Exiting...\n\n";
 	exit(1);
     }
 
     # check that a username was provided and is a valid username
     if (! defined $username ) {
-	print "ERROR ($progname): Username argument was not passed on the command line.\n" .
-	      "      Exiting...\n\n";
+	print "\nERROR ($progname): Username argument was not passed on the command line.\n" .
+	        "      Exiting...\n\n";
 	exit(1);
     }
     if (system("id $username") == 0) {
 	# username was found 
     } else {
-	print "ERROR ($progname): Username '$username' does not appear to be a valid username.\n" .
-	      "      \%> id $username       => failed!\n" .
-	      "      Exiting...\n\n";
+	print "\nERROR ($progname): Username '$username' does not appear to be a valid username.\n" .
+	        "      \%> id $username       => failed!\n" .
+	        "      Exiting...\n\n";
 	exit(1);
     }
 
@@ -189,8 +188,9 @@ sub parse_cmd_line {
 ########################################
 sub CMDParseError {
     # report cmd line parsing errors, display help then exit
-    print "\nERROR: Unrecognized command line option.\n" .
-          "       use the -help option to get program usage help.\n\n"; 
+    print "\nERROR ($progname): Unrecognized command line option.\n" .
+            "       @ARGV\n" .
+            "       use the -help option to get program usage help.\n\n"; 
     exit 1;
 } # end sub &CMDParseError()
 
@@ -267,8 +267,6 @@ sub gen_filelist_BOM {
 	exit 1;
     }
 
-exit 0;
-
 } # end of sub &gen_filelist_BOM
 
 ########################################
@@ -303,6 +301,8 @@ sub chmod_filelist_BOM {
     print "INFO: Running chown\n" .
           "      $cmd\n";
     system($cmd);
+
+    print "      Finished running chown\n\n";
 
 } # end of sub &chmod_filelist_BOM()
 

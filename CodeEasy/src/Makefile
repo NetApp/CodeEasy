@@ -34,14 +34,15 @@
 all: sur fast_chown
 
 # build the 'sur' program
+# chmod u+s enables setuid to work
 sur: sur.c
 	sudo gcc -o sur sur.c
-	sudo chmod 0711 sur
+	sudo chmod 4755 sur
 
 # build the 'fast_chown' program
 fast_chown: fast_chown.c
 	sudo gcc -O2 -o fast_chown fast_chown.c
-	sudo chmod 0711 fast_chown
+	sudo chmod 4755 fast_chown
 
 # clean or remove prior builds 
 clean:

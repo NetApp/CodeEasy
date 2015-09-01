@@ -142,13 +142,13 @@ sub list_snapshots {
 
 
     # the snapshots can be found in the master directory
-    my $snap_dir = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/";
+    my $snap_dir = "$CeInit::CE_JUNCT_PATH_MASTER/.snapshot/";
 
     # check that the snapshot directory exists
     if (! -d $snap_dir) {
 	print "\nERROR ($main::progname) The master volume Snapshot directory not found!\n" .
 	        "      $snap_dir\n\n" .
-		"      Check the \$CE_UNIX_MASTER_VOLUME_PATH/.snapshot/ setting in CeInit.pm\n" .
+		"      Check the \$CE_JUNCT_PATH_MASTER/.snapshot/ setting in CeInit.pm\n" .
 	        "Exiting...\n\n";
 	exit 1;
     }
@@ -203,9 +203,140 @@ sub list_snapshots {
 
 } # end of sub &list_snapshots()
 
+###################################################################################   
+# Name: vGetcDOTList()
+# Func: Note that Perl is a lot more forgiving with long object lists than ONTAP is.  As a result,
+#	  we have the luxury of returning the entire set of objects back to the caller.  Get all the
+#	  objects rather than waiting.
+#
+###################################################################################   
+sub vGetcDOTList {
+    my ( $zapiServer, $zapiCall, @optArray ) = @_;
+    my @list;
+    my $done = 0;
+    my $tag  = 0;
+    my $zapi_results;
+    my $MAX_RECORDS = 200;
+
+    # loop thru calling the command until all tags are processed
+    while ( !$done ) {
+
+	#print "Attempting to collect " . ( $tag ? "more " : "" ) . "API results for $zapiCall from vserver ...\n" if ($main::verbose);
+
+	# if a tag exists, pass it to the zapi command
+	if ( $tag ) {
+	    if ( @optArray ) {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS, @optArray );
+	    } else {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "tag", $tag, "max-records", $MAX_RECORDS );
+	    }
+	} else {
+	    # not tag exists - probably the first time the command is called
+	    if ( @optArray ) {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS, @optArray );
+	    } else {
+		$zapi_results = $zapiServer->invoke( $zapiCall, "max-records", $MAX_RECORDS );
+	    }
+	}
+
+	# check status of the call
+	if ( $zapi_results->results_status() eq "failed" ) {
+	    print "ERROR: ONTAP API call $zapiCall failed: " . $zapi_results->results_reason() . "\n";
+	    return( 0 );
+	}
+
+	# get next tag (if multiple queries are required to get large lists
+	$tag = $zapi_results->child_get_string( "next-tag" );
+
+	my $list_attrs = $zapi_results->child_get( "attributes-list" );
+	if ( $list_attrs ) {
+	    my @list_items = $list_attrs->children_get();
+	    if ( @list_items ) {
+		push( @list, @list_items );
+	    }
+	}
+
+	# if no tags are left, then exit the while loop
+	if ( !$tag ) {
+	    $done = 1;
+	}
+    }
+
+    # return list to calling sub
+    return( @list );
+
+} # end of sub vGetcDOTList()
 
 
+###################################################################################   
+# Name: getVolumeList()
+# Func: return list of volumes on vserver
+###################################################################################   
+sub getVolumeList {
 
+    # pass naserver handle into the sub
+    my ($naserver) = @_;
+
+    my %volume_list;
+
+    # get list of volume data
+    my @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-get-iter" );
+
+    # loop thru data and pull out attribute information
+    print "DEBUG: List of volumes on the vserver\n" if ($main::verbose);
+    foreach my $tattr ( @vlist ) {
+	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
+
+	#print "DEBUG: volume-id-attributes\n";
+	#printf($tattr->sprintf());
+	
+	# check that the ->child_get function returned data 
+	if ( $vol_id_attrs ) {
+	    my $volume_name = $vol_id_attrs->child_get_string( "name" );
+
+	    # store volume in list which is easy to access via hash
+	    $volume_list{$volume_name} = 1;
+
+	    print "       $volume_name \n" if ($main::verbose);
+	}
+    }
+
+    # return list of volumes
+    return %volume_list;
+
+} # end sub &getVolumeList()
+
+###################################################################################   
+# Name: getFlexCloneList()
+# Func: return list of flex clone volumes on vserver
+###################################################################################   
+sub getFlexCloneList {
+
+    # pass naserver handle into the sub
+    my ($naserver) = @_;
+
+    my %clone_list;
+
+    # get list of FlexClone data
+    my @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-clone-get-iter" );
+
+    # loop thru data and pull out attribute information
+    print "DEBUG: List of FlexClones on the vserver\n" if ($main::verbose);
+    foreach my $vol_data ( @vlist ) {
+
+	    # get the clone name from the lookup
+	    my $clone_name     = $vol_data->child_get_string( "volume"         );
+
+	    # store volume in list which is easy to access via hash
+	    $clone_list{$clone_name} = 1;
+
+	    print "       $clone_name  \n" if ($main::verbose);
+    }
+
+    # return list of volumes
+    return %clone_list;
+
+} # end sub &getFlexCloneList()
 
 # ALL PERL PACKAGES (.pm files) must end with '1;'  
 # So don't remove...
