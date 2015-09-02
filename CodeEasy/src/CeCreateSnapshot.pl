@@ -210,6 +210,16 @@ sub snapshot_create {
 	  "      UNIX path     = $UNIX_path/.snapshot/$snapshot_name\n";
 
     #--------------------------------------- 
+    # check if snapshot already exists
+    #--------------------------------------- 
+    if (-e "$UNIX_path/.snapshot/$snapshot_name") {
+	print "\nERROR ($progname): Snapshot already exists.\n" .
+	        "      $UNIX_path/.snapshot/$snapshot_name\n" .
+	        "Exiting...\n\n";
+	exit 1;
+    } 
+
+    #--------------------------------------- 
     # create snapshot
     #--------------------------------------- 
     $out = $naserver->invoke("snapshot-create", "volume",   $volume, 
@@ -247,6 +257,18 @@ sub snapshot_delete {
 
     print "INFO  ($progname): Deleting snapshot for volume <$volume>\n" .
           "      snapshot name = $snapshot_name\n";
+
+    my $UNIX_path     = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/$volume";
+
+    #--------------------------------------- 
+    # check if snapshot does not exist
+    #--------------------------------------- 
+    if (! -e "$UNIX_path/.snapshot/$snapshot_name") {
+	print "\nERROR ($progname): Snapshot does not exist.\n" .
+	        "      $UNIX_path/.snapshot/$snapshot_name\n" .
+	        "Exiting...\n\n";
+	exit 1;
+    } 
 
     #--------------------------------------- 
     # delete snapshot

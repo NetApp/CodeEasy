@@ -111,9 +111,7 @@ exit(0);
 ########################################
 # Command line Parser
 ########################################
-
 sub parse_cmd_line {
-print "ARGV = @ARGV\n";
 
   # parse command line 
   GetOptions ("h|help"        => sub { &show_help() },   
@@ -232,8 +230,7 @@ $progname: Usage Information
 	      "      fast_chown must be compiled using the supplied Makefile\n\n";
 	exit(1);
     } 
-    print "INFO ($progname): Using the following fast_chown executable.\n" .
-	  "     $fast_chown_exe\n";
+    print "INFO ($progname): Using the following fast_chown executable $fast_chown_exe\n\n";
 
     exit 0;
 

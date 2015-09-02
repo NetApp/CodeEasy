@@ -81,6 +81,17 @@ Currently the CodeEasy EvalKit is only supported for Unix environments and NFS.
 
 
 ****************************************
+  Filers Export_policy - volumes need root superuser access
+****************************************
+In order for "sudo chown" to modify the clones owner:group settings, the
+NetApp vserver export_policies must allow root super user permissions on the
+volume and flexclones.  If you run sudo chown and you get a permission denied
+message, then most likely the volumes export_policy restricts root superuser
+operations.  Test that %> sudo chown <a file> works correctly.  If this
+command does not work, then CeChownFile.pl will not work either.
+
+
+****************************************
   ONTAPI filer permission setup
 ****************************************
     To enable filer access via the NetApp Manageability SDK vserver

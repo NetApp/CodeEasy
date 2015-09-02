@@ -50,9 +50,12 @@ package CeInit;
     #      sudo mount -t nfs <vserver>:<junction_path> <unix mount point>
     #      example:
     #      sudo mount -t nfs devops_vserver:/ce_projects /
+
+    # location of root of the juction_path
+    our $CE_JUNCT_PATH_ROOT        = "/ce_projects/";
 						    
     # location on the filer where MASTER volume and snapshots are stored
-    our $CE_JUNCT_PATH_MASTER      = "/ce_projects/project_A/jenkins_build";
+    our $CE_JUNCT_PATH_MASTER      = "$CE_JUNCT_PATH_ROOT/project_A/jenkins_build";
     # Default volume will be created (or exists) at 
     #    JP = $CD_JUNCT_PATH_MASTER/$CE_DEFAULT_VOLUME_NAME
     #         /ce_projects/project_A/jenkin_build     , where jenkin_build is a volume 
@@ -68,9 +71,13 @@ package CeInit;
 # UNIX File System Setup
 ########################################
 
+    # UNIX path where junction_path root volume is mounted 
+    our $CE_UNIX_ROOT_VOLUME_PATH  = "/ce_projects";
+    
+
     # UNIX path where master volume is mounted 
     #      this is volume which will be snapshot and flexcloned.
-    our $CE_UNIX_MASTER_VOLUME_PATH  = "/ce_projects/project_A/jenkin_build";
+    our $CE_UNIX_MASTER_VOLUME_PATH  = "$CE_UNIX_ROOT_VOLUME_PATH/project_A/jenkin_build";
 
     # USER FlexClones will be stored at 
     #    /x/eng/<site>/users/<username>/<flexclone> 
@@ -128,7 +135,7 @@ package CeInit;
                                       "user-id",               $user_id, 
                                       "group-id",              $group_id,
                                       "space-reserve",         'none',
-				      "volume-security-style", 'unit'
+				      "volume-security-style", 'unix'
 				      );
                                                      
 
@@ -141,6 +148,7 @@ our @EXPORT = qw(@CE_ADMIN_USER$
 		 $CE_STYLE
                  $CE_TRANSPORT_TYPE $CE_PORT
                  $CE_DEVOPS_USER
+                 $CE_UNIX_ROOT_VOLUME_PATH $CE_JUNCT_PATH_ROOT
 		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH 
                  $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS
 		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS

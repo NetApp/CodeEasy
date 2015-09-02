@@ -215,13 +215,37 @@ sub create_volume {
     # NOTE: volumes will be created by the common build user 'MASTER', so they will be mounted to the
     # CE_UNIX_MASTER_VOLUME_PATH vs the user path CE_UNIX_USER_FLEXCLONE_PATH
 
-    my $junction_path = "$CeInit::CE_JUNCT_PATH_MASTER/$volume";
-    my $UNIX_path     = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/$volume";
+    my $junction_path = "$CeInit::CE_JUNCT_PATH_ROOT/$volume";
+    my $UNIX_path     = "$CeInit::CE_UNIX_ROOT_VOLUME_PATH/$volume";
     print "INFO  ($progname): Creating new volume\n" .
           "      volume        = $volume\n" .
 	  "      junction path = $junction_path \n" .
 	  "      UNIX path     = $UNIX_path\n";
 
+    #--------------------------------------- 
+    # check that the volume does not already exists - if it does, then error
+    #--------------------------------------- 
+    # get list of volumes from the vserver
+    my %volume_list = &CeCommon::getVolumeList($naserver);
+
+    # check that the volume to create is not in the list of volumes available
+    if (! defined $volume_list{$volume} ) {
+	# the master volume must exist to clone 
+	print "DEBUG: Volume '$volume' does not yet exists\n" if ($verbose);
+    } else {
+        # if not, then generate an error
+	print "ERROR: Volume to create already exists.\n" .
+	      "       Check that volume '$volume' is unique and does not already exist.\n" .
+	      "       Exiting...\n\n";
+	exit 1;
+    }
+
+    #--------------------------------------- 
+    # Check for user approval
+    #--------------------------------------- 
+    print "\nPress 'y' to continue, or any other key to quit: ";
+    my $input = <STDIN>;
+    exit if $input ne "y\n";
 
     #--------------------------------------- 
     # create volume
@@ -256,6 +280,20 @@ sub remove_volume {
     # temp vars for getting filer info and status
     my $out;
     my $errno;
+
+    my $junction_path = "$CeInit::CE_JUNCT_PATH_ROOT/$volume";
+    my $UNIX_path     = "$CeInit::CE_UNIX_ROOT_VOLUME_PATH/$volume";
+    print "INFO  ($progname): Remove volume\n" .
+          "      volume        = $volume\n" .
+	  "      junction path = $junction_path \n" .
+	  "      UNIX path     = $UNIX_path\n";
+
+    #--------------------------------------- 
+    # Check for user approval
+    #--------------------------------------- 
+    print "\nPress 'y' to continue, or any other key to quit: ";
+    my $input = <STDIN>;
+    exit if $input ne "y\n";
 
     #--------------------------------------- 
     # first make sure the volume is unmounted

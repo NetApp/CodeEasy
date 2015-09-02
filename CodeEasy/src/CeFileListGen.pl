@@ -132,8 +132,7 @@ sub parse_cmd_line {
 	# example: /u/my_path/   should be just /u/my_path 
 	$root_directory =~ s:/$::g;
 
-	print "INFO  ($progname): Creating filelist for root directory\n" .
-	      "      $root_directory\n";
+	print "INFO  ($progname): Scanning directory: $root_directory\n";
     } else {
 	print "ERROR ($progname): Directory does not exist.\n" .
 	      "      check that the directory is a full UNIX path and exists.\n" .
@@ -155,7 +154,7 @@ sub parse_cmd_line {
 	}
     }
 
-    print "INFO  ($progname): Output filelist named = $filelist_BOM\n";
+    print "INFO  ($progname): Output filelist:    $filelist_BOM\n";
 
 } # end of sub parse_cmd_line()
 
@@ -228,10 +227,22 @@ sub create_filelist_BOM {
 	exit 1;
     }
 
+    # change to the root_directory so the find is a relative path
+    chdir $root_directory;
+
+    #--------------------------------------- 
+    # find list of files in the top level directory
+    # these are missed in the directory search
+    #--------------------------------------- 
+    my @top_level_files_list = qx($CeInit::CE_CMD_FIND . -maxdepth 1 -type f );
+    chomp(@top_level_files_list);
+
 
     # create sub list of directories but only one level deep
     # -maxdepth 1 => maximum search depth 1 directory
     # -type d     => type directory
+    # NOTE: find will not follow symbolic links - this is probably a good
+    # thing since you don't want to chown files outside the cloned volume.
     my @dir_list = qx($CeInit::CE_CMD_FIND $root_directory -maxdepth 1 -type d );
     chomp(@dir_list);
 
@@ -254,17 +265,8 @@ sub create_filelist_BOM {
     # re-assign the list back to the original name
     @dir_list = @new_dir_list;
 
-    # determine number of directories in the array @dir_list
     my $total_dir_count= $#dir_list;
     printf("INFO  \(%s\): Total Dir = %d\n", $progname, $total_dir_count) if (defined $verbose);
-
-
-    #--------------------------------------- 
-    # find list of files in the top level directory
-    # these are missed in the directory search
-    #--------------------------------------- 
-    my @top_level_files_list = qx($CeInit::CE_CMD_FIND $root_directory -maxdepth 1 -type f );
-    chomp(@top_level_files_list);
 
     #--------------------------------------- 
     # find all files in each directory 
@@ -272,9 +274,6 @@ sub create_filelist_BOM {
     #--------------------------------------- 
     my $cnt   = 0;
     my $p_cnt = 0;
-
-    # change to the root_directory so the find is a relative path
-    chdir $root_directory;
  
     # Limiting to $max_thread_count number of threads to have a better hand on the threads
     #   this loop will run in chunks of $max_thread_count directories
@@ -306,7 +305,7 @@ sub create_filelist_BOM {
 
     }
 
-    print "INFO  ($progname): All threads completed\n";
+    print "\nINFO  ($progname): All 'find' threads completed\n\n";
 
     # Accumlating all the fileslist into a single file
     my $cmd = "$CeInit::CE_CMD_FIND $temp_dir -name \*.list";
@@ -314,10 +313,12 @@ sub create_filelist_BOM {
     chomp $list_filelists;
     $cnt = 0;
 
+     
+    #--------------------------------------- 
     # open final filelist BOM and then cat all files to it.
+    #--------------------------------------- 
     if (open (FILEOUT, ">$filelist_BOM") ) {
-	print "INFO  ($progname): Writing complete file list file\n" .
-	      "      $filelist_BOM\n";
+	print "INFO  ($progname): Writing complete file list: $filelist_BOM\n";
     } else {
 	print "ERROR ($progname): Could not open $filelist_BOM for writing\n" .
 	      "      Exiting...\n";
@@ -325,21 +326,38 @@ sub create_filelist_BOM {
 	&exit_prog(1);
     }
 
-    # write out top level files first followed by files found in directories
-    foreach my $top_file (@top_level_files_list) {
-        chomp $top_file;
-	# adding quotes "" just incase of Windows type file names which include spaces
-	print FILEOUT "\"$top_file\"\n";
+    # Write out top level files - only if top level files were found.
+    if ($#top_level_files_list > 0) {
+
+	# write out top level files first followed by files found in directories
+	foreach my $top_file (@top_level_files_list) {
+	    chomp $top_file;
+	    # adding quotes "" just incase of Windows type file names which include spaces
+	    print FILEOUT "\"$top_file\"\n";
+	}
+    } else {
+        # no top level files found - generate warning message 
+	print "INFO  ($progname): No top level files found.\n" .
+	      "      If this appears incorrect, check if the top level directory is a link.  This script will not traverse links.\n";
     }
 
     # loop thru the a sorted list of the file lists
     @ARGV = (sort split '^', $list_filelists);
-    #foreach my $file (sort split '^', $list_filelists) {
-    while (<>) {
-	chomp;
-	# adding quotes "" just incase of Windows type file names which include spaces
-	print FILEOUT "\"$_\"\n";
+
+    # check if directory files were found.  If not, then skip this step
+    if ($#ARGV > 0) {
+	#foreach my $file (sort split '^', $list_filelists) {
+	while (<>) {
+	    chomp;
+	    # adding quotes "" just incase of Windows type file names which include spaces
+	    print FILEOUT "\"$_\"\n";
+	}
+    } else {
+	# no files found - skip and provide message
+	print "INFO: No files were found when traversing the directory hierarchy.\n" .
+	      "      If this appears incorrect, check if the top level directory is a link.  This script will not traverse links.\n";
     }
+
     # close the fileout
     close FILEOUT;
 
@@ -365,7 +383,7 @@ sub create_temp_dir {
 	# create the directory
 	if (system ("/bin/mkdir $temp_dir") == 0) {
 	    # successfully created temp directory
-	    print "INFO  ($progname): Created temp directory in $temp_dir\n";
+	    print "INFO  ($progname): Temp directory:     $temp_dir\n";
 
 	    # return to calling subroutine
 	    return $temp_dir;
@@ -427,7 +445,7 @@ sub cleanup_temp_dir {
 
     # remove the temp directory
     if ( system("/bin/rm -fr $temp_dir" ) == 0 ) {
-	print "INFO  ($progname): Temp directory cleaned up successfully.\n";
+	print "INFO  ($progname): Temp directory cleaned up.\n";
 	print "                   $temp_dir \n" if (defined $verbose);
     } else {
 	print "ERROR ($progname): Temp directory cleaned up failed.\n" .
@@ -451,7 +469,7 @@ sub exit_prog {
 	&cleanup_temp_dir();
     }
 
-    print "INFO:  $progname exiting...\n\n";
+    print "INFO  ($progname): Exiting...\n\n";
 
     exit($exit_code);
 

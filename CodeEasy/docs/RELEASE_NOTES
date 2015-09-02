@@ -2,6 +2,35 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.0.9-Alpha  (release date: 2015-09-02)
+----------------------------------------
+    Updated CeInit.pm
+    - Added two new variables $CE_UNIX_ROOT_VOLUME_PATH $CE_JUNCT_PATH_ROOT
+      thes variables are used by CeCreateVolume.pl to enable creating and
+      junctioning new volumes.
+
+    Updated Makefile and sur script
+    - Setup build chmod to 4755.  This sets the sticky bits which is needed to
+      allow sudo to work correctly.
+    - Cleaned up messaging in sur.c to be easier to read and debug
+
+    Corrected CeFileListGen.pl issues
+    - Correctly catalog top level files.
+    - Added warning messages if no files are found.  This might be due to
+      links. Note 'find' does not following links intentionally.
+
+    Improved error messages
+    - Added pre-checks for existing/not existing volumes, snapshots and
+      flexclones.  This ensures proper user input.
+    - Error messages are more non-storage user friendly.  Ideally input errors
+      are now caught before invoking filer API - since filer error API messages are
+      often unclear.
+
+    Updated QUICKSTART guide
+    - Added additional notes regarding filer export_policy setup.
+    - Documented limitations associated with 'find' command not following
+      links.
+
 CodeEasy_1.0.8-Alpha  (release date: 2015-08-24)
 ----------------------------------------
     Corrected Project_Example.txt example.
