@@ -2,6 +2,11 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.0.10-Alpha  (release date: 2015-09-03)
+----------------------------------------
+    Fixed incorrect snapshot existence check in CeCreateSnapshot.pl
+
+
 CodeEasy_1.0.9-Alpha  (release date: 2015-09-02)
 ----------------------------------------
     Updated CeInit.pm
