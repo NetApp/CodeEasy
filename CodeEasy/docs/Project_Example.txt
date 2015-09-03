@@ -7,7 +7,7 @@
 
 Project Directory Structure (UNIX View)                    Filer View                    Junction Path
 ===========================                                ===============               =================
-ce_projects                                                ce_projects                   /ce_projects
+ce_projects                                                ce_projects (volume)          /ce_projects
 ├── project_A                                              project_A (qtree)             /ce_projects/project_A
 ├── project_B                                              project_B (qtree)             /ce_projects/project_B
 └── project_C                                              project_C (qtree)             /ce_projects/project_C
