@@ -204,16 +204,20 @@ sub snapshot_create {
     my $out;
     my $errno;
 
-    print "INFO  ($progname): Creating snapshot for volume <$volume>\n" .
-          "      snapshot name = $snapshot_name\n" .
-	  "      UNIX path     = $CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name\n";
+    print "INFO  ($progname): Creating snapshot '$snapshot_name' for volume '$volume'\n" .
+	  "      UNIX path    = $CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name\n";
 
     #--------------------------------------- 
     # check if snapshot already exists
     #--------------------------------------- 
-    if (-e "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name") {
-	print "\nERROR ($progname): Snapshot already exists.\n" .
-	        "      $CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name\n" .
+    # vserver>  vol snapshot show -volume project_A_jenkin_build 
+    my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
+
+
+    # check if the snapshot already exists.
+    if (defined $snapshot_list{$snapshot_name} ) {
+	print "\nERROR ($progname): Snapshot '$snapshot_name' already exists for volume '$volume'.\n" .
+	        "      Try selecting a different snapshot name or delete this snapshot.\n" .
 	        "Exiting...\n\n";
 	exit 1;
     } 
@@ -254,19 +258,23 @@ sub snapshot_delete {
     my $out;
     my $errno;
 
-    print "INFO  ($progname): Deleting snapshot for volume <$volume>\n" .
-          "      snapshot name = $snapshot_name\n";
-
+    print "INFO  ($progname): Deleting snapshot '$snapshot_name' for volume '$volume'\n";
 
     #--------------------------------------- 
-    # check if snapshot does not exist
+    # check if snapshot does not exists
     #--------------------------------------- 
-    if (! -e "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name") {
-	print "\nERROR ($progname): Snapshot does not exist.\n" .
-	        "      $CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$snapshot_name\n" .
+    # vserver>  vol snapshot show -volume project_A_jenkin_build 
+    my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
+
+
+    # check if the snapshot already exists.
+    if (! defined $snapshot_list{$snapshot_name} ) {
+	print "\nERROR ($progname): Snapshot '$snapshot_name' does not exist on volume '$volume'.\n" .
+	        "      Check that you have specified the correct snapshot name.\n" .
 	        "Exiting...\n\n";
 	exit 1;
     } 
+
 
     #--------------------------------------- 
     # delete snapshot

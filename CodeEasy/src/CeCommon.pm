@@ -338,6 +338,46 @@ sub getFlexCloneList {
 
 } # end sub &getFlexCloneList()
 
+###################################################################################   
+# Name: getSnapshotList(naserver, volume)
+# Func: return list of snapshots on the volume
+###################################################################################   
+sub getSnapshotList {
+
+    # pass naserver handle into the sub
+    my ($naserver, $volume) = @_;
+
+    my %snapshot_list;
+
+    # get list of snapshot data
+    my @slist = &CeCommon::vGetcDOTList( $naserver, "snapshot-get-iter" );
+
+    # loop thru the list of returned snapshot data
+    foreach my $snap_data (@slist) {
+	# get the clone name from the lookup
+
+	# a data structure is returned - get the volume name and the snapshot
+	# name from the data structure.
+	my $snap_volume = $snap_data->child_get_string("volume");
+	my $snap_name   = $snap_data->child_get_string("name");
+
+	# all volumes will be returned - only collect snapshots for the
+	# specified volume
+	if ("$snap_volume" eq "$volume" ) {
+	    print "DEBUG: snapshot: $snap_volume => $snap_name\n" if (0);
+
+	    # store volume in list which is easy to access via hash
+	    $snapshot_list{$snap_name} = 1;
+	}
+    }
+
+    # return list of volumes
+    return %snapshot_list;
+
+} # end sub &getSnapshotList()
+
+
+
 # ALL PERL PACKAGES (.pm files) must end with '1;'  
 # So don't remove...
 1;
