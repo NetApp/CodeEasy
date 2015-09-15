@@ -300,4 +300,62 @@ command does not work, then CeChownFile.pl will not work either.
 
 
 
+****************************************
+Understanding the chown flow 
+****************************************
+When a FlexClone is created, the clone retains the user and group permissions
+of the person who owns the master volume.  In order to make the FlexClone
+fully usable by the new owner, the files must be chown?ed.  The new clone
+owner does not have permission to chown the files themselves, another user
+with sufficient permissions must change the ownership of the files and
+directories.
+
+Since there are potentially millions of files and directories in the volume,
+the time to 'chown' the volume can be quite significant - potentially hours.
+The CodeEasy eval kit contains optimized scripts for speeding up the process
+of chown'ing the files.  The first speed up comes from the use of fast_chown.c
+which uses lchown which runs faster then conventional UNIX chown.  Second the
+process of finding the files to chown has been split from the process of
+actually doing the chown command itself.  A script called CeFileListGen.pl is
+provided to generate a file list very fast by essentially performing massively
+parallel find commands. By splitting the find operation from the chown
+operation, this allows the CeFileListGen.pl script to be run in the master
+volume by the central build scripts. This means that the user does not see the
+time to 'find' the files.  The FlexCloned volume will have a file called
+filelist_BOM (bill of materials) which is a list of all the files in the
+master volume.  Lastly a script called CeChownList.pl reads the filelistBOM
+file and then using the xargs parallel option runs fast_chown on the each
+file.  The result is a massive volume of files can be chowned in 10x faster.
+
+****************************************
+Sudo Permissions and the sur command
+****************************************
+The owner of the master volume - like a flow owner 'devops' will run the
+scripts for doing things like creating volumes, snapshots, flex clones and
+chowning files.  The 'devops' user requires sudo permissions to be able to do
+things like chown.  By default a user can not change the ownership of a file
+from themselves to another user without sudo permissions.  Its a security
+thing - typically only root is allowed to change file ownership from one user
+to another.  As a result the 'devops' or equivalent users must have the
+following sudo options enabled.
+
+Using the 'visudo' command   (%> visudo)  Add the following lines to the sudo
+file
+    # add sudo permissions for user 'devops'
+    # this will enable user to run command without requiring a password.
+    devops  ALL=(ALL) NOPASSWD: ALL
+
+The sur.c program command is a script which is provided by the CodeEasy eval
+kit to enable a normal user to switch to user 'devops' to run commands like
+creating a flex clone or chowning a volume.  The compiled program 'sur'
+essentially does a ?setuid? then runs the called script.  
+Example:
+    %jmichae1> ~jmichae1/CodeEasy/src/sur devops
+    %~jmichae1/CodeEasy/src/CeChownList.pl -d $PWD -u jmichae1
+
+In the above example sur will setuid to user devops, then call the
+CeChownList.pl script to chown the files to user jmichae1.  Note that the UNIX
+shell is current run as user jmichae1, so the sur command switches setuid to
+user devops.  
+
 
