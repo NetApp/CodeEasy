@@ -97,14 +97,14 @@ if (! defined $volume_delete) {
     # create flexclone
     #    flexclone volume is created by default - unless -remove is specified
     #--------------------------------------- 
-    #&clone_create($volume, $snapshot_name, $clone_name ) 
+    &clone_create($volume, $snapshot_name, $clone_name ) 
 
     #--------------------------------------- 
     # change permission of clone from the original snapshot owner
     # to the current user.
     #--------------------------------------- 
-    # NOTE: not yet implemented here
-    &chown_clone();
+    # NOTE: not yet implemented here 
+    # &chown_clone();
 }
 
 #--------------------------------------- 
