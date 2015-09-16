@@ -55,9 +55,9 @@ use NaElement;
 # load CodeEasy packages
 #---------------------------------------- 
 use lib "$FindBin::Bin/.";
-use CeInit;                   # found in the file CeInit.pm
+use CeInit;                      # found in the file CeInit.pm
 
-$main::cdot_version = "unknown";     # variable holder for cDOT version
+$main::cdot_version = "unknown"; # variable holder for cDOT version
 
 
 
@@ -65,7 +65,6 @@ $main::cdot_version = "unknown";     # variable holder for cDOT version
 # Initialize filer - return data structure
 ###################################################################################
 sub init_filer {
-
 
     # temp vars for getting filer info and status
     my $out;
@@ -84,19 +83,21 @@ sub init_filer {
     my $naserver = NaServer->new($CeInit::CE_VSERVER, 1, 7);
 
     # set API transport type - HTTP is the default
-    $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE);
+    $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE) if (defined $CeInit::CE_TRANSPORT_TYPE);
 
     # pass username/password for vserver ontapi application access
     #     $naserver->set_admin_user("vsadmin", "devops123");
-    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
+    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER)         if (defined @CeInit::CE_ADMIN_USER);
 
     # set communication style - typically just 'LOGIN'
-    $naserver->set_style($CeInit::CE_STYLE);
+    $naserver->set_style($CeInit::CE_STYLE)                   if (defined $CeInit::CE_STYLE);
 
     # set communication port
-    $naserver->set_port($CeInit::CE_PORT);
+    $naserver->set_port($CeInit::CE_PORT)                     if (defined $CeInit::CE_PORT);
 
+    #--------------------------------------- 
     # check connection to the filer by requesting a simple ontapi version status
+    #--------------------------------------- 
     $out =  $naserver->invoke("system-get-version");
 
     # check error status and exit if basic communication with the filer can't be estabilished.
@@ -109,8 +110,10 @@ sub init_filer {
         exit 1;
     }
 
+    #--------------------------------------- 
     # print the controller version
     # Example:       NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
+    #--------------------------------------- 
     $main::cdot_version = $out->child_get_string("version");
     print "INFO  ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running ONTAP API version:\n" . 
           "      $main::cdot_version\n\n";
@@ -146,8 +149,7 @@ sub list_snapshots {
     # Get a list of the snapshots associated with the volume
     #--------------------------------------- 
     # vserver>  vol snapshot show -volume project_A_jenkin_build 
-    my %snapshot_list = ();
-    %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
+    my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
 
     print "\nINFO  ($main::progname): Snapshot list for volume '$volume'\n" .
             "      (NOTE: hourly, daily and weekly snapshots not listed)\n";
@@ -170,7 +172,7 @@ sub list_snapshots {
     }
 
     # report nice message if not snapshot directories found
-    if ($snap_cnt ==0 ) {
+    if ($snap_cnt == 0 ) {
 	print "\n      No snapshots found for volume '$volume'\n";
 	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
     }
@@ -179,15 +181,14 @@ sub list_snapshots {
     print "\n$main::progname exited successfully.\n\n";
     exit 0;
 
-
 } # end of sub &list_snapshots()
+
 
 ###################################################################################   
 # Name: vGetcDOTList()
 # Func: Note that Perl is a lot more forgiving with long object lists than ONTAP is.  As a result,
 #	  we have the luxury of returning the entire set of objects back to the caller.  Get all the
 #	  objects rather than waiting.
-#
 ###################################################################################   
 sub vGetcDOTList {
     my ( $zapiServer, $zapiCall, @optArray ) = @_;
@@ -304,7 +305,7 @@ sub getFlexCloneList {
     foreach my $vol_data ( @vlist ) {
 
 	    # get the clone name from the lookup
-	    my $clone_name     = $vol_data->child_get_string( "volume"         );
+	    my $clone_name     = $vol_data->child_get_string( "volume" );
 
 	    # store volume in list which is easy to access via hash
 	    $clone_list{$clone_name} = 1;

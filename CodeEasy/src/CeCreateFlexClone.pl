@@ -84,7 +84,7 @@ our $naserver = &CeCommon::init_filer();
 exit 0    if (defined $test_only);
 
 #--------------------------------------- 
-# list available snapshots
+# list available snapshots - then exit
 #--------------------------------------- 
 if (defined $list_snapshots) {
     &CeCommon::list_snapshots($naserver, $volume); # list available snapshots
@@ -92,7 +92,7 @@ if (defined $list_snapshots) {
 }
 
 #--------------------------------------- 
-# List Volumes - then exit
+# list Volumes - then exit
 #--------------------------------------- 
 &list_flexclones($naserver, $volume) if ($list_flexclones);
 
@@ -108,7 +108,7 @@ if (! defined $volume_delete) {
 
     #--------------------------------------- 
     # change permission of clone from the original snapshot owner
-    # to the current user.
+    # to the current user. this can be handled here or in a wrapper script
     #--------------------------------------- 
     # NOTE: not yet implemented here 
     # &chown_clone();
@@ -158,6 +158,10 @@ sub parse_cmd_line {
               'v|verbose'          => \$verbose,                 # increase output verbosity
 	      '<>'                 => sub { &CMDParseError() },
 	      ); 
+
+    #---------------------------------------- 
+    # check for correct inputs
+    #---------------------------------------- 
 
     # check if volume name was passed on the command line
     if (defined $volume ) {
@@ -316,23 +320,6 @@ sub clone_create {
     # automatically by the filer.
     my $UNIX_clone_path     = "$UNIX_mount_path/$clone_name";
 
-    # create user path directory - this directory must exist for the lower
-    # level mount to attach correctly. 
-    # NOTE: NetApp filer junction_paths should take care of completing any
-    # missing paths if setup correctly.  But in some cases, it might be
-    # necessary to first create the full path.
-#   my $cmd = "/bin/mkdir -p $UNIX_mount_path";
-#
-#   if ( system ($cmd) == 0) {
-#       print "DEBUG ($progname): Created UNIX mount point for new FlexClone at $UNIX_mount_path\n" if ($verbose);
-#   } else {
-#       print "ERROR ($progname): Could not create UNIX mount point for new FlexClone at $UNIX_mount_path\n" .
-#             "       Check that the UNIX path and permissions exist.\n" .
-#             "       $cmd\n" .
-#             "Exiting...\n";
-#       exit 1;
-#   }
-
 
     #--------------------------------------- 
     # determine junction path  (mount point)
@@ -356,7 +343,6 @@ sub clone_create {
           "      parent-volume         = $volume\n" .
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
-          "      UNIX mount path       = $UNIX_mount_path\n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
 	  "      Comment (clown owner) = <$comment_field>\n\n";
                   
@@ -397,9 +383,8 @@ sub clone_create {
     }
 
     #--------------------------------------- 
-    # check if snapshot does not exists
+    # check if snapshot exists - if not error
     #--------------------------------------- 
-    # vserver>  vol snapshot show -volume project_A_jenkin_build 
     my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
 
     # check if the snapshot exists.
@@ -419,8 +404,8 @@ sub clone_create {
                                                     "volume",          $flexclone_vol_name,
 						    "junction-path",   $junction_path,
 						    );
-						    # add this line back to the volume-clone-create
-						    # command if using cDOT8.3 or later
+						    # the "comment" field is not supported in the API, but it is available
+						    # on the cDOT cmd line. Hopefully this will be supported in the future.
 						    #"comment",         $comment_field
 
     # check status of the invoked command
@@ -438,8 +423,6 @@ sub clone_create {
     }
     print "INFO ($progname): FlexClone <$clone_name> successfully created and mounted\n" .
           "                  at UNIX path <$UNIX_clone_path>\n";
-
-
 
 
 } # end of sub clone_create()
@@ -470,8 +453,19 @@ sub chown_clone {
     #                            sur <build user>            <command to run>
     my $sur_cmd = "$FindBin::Bin/sur $CeInit::CE_DEVOPS_USER $cmd";
 
-    print "DEBUG: Command to run CeChownList.pl\n" .
-          "       $sur_cmd\n";
+    print "INFO: Running CeChownList.pl\n" .
+          "      $sur_cmd\n";
+
+    # run the command and check the status
+    if (system($sur_cmd) == 0) {
+	print "INFO:  Successfully ran CeChownList.pl\n";
+    } else {
+	print "ERROR: Problem occured while running CeChownList.pl\n" .
+	      "       This error might be due to sudo permissions required to run chown cmd.\n" .
+	      "       Refer to the QUICKSTART guide for usage instructions\n" .
+	      "       Exiting...\n";
+        exit 1;
+    }
 
 } # end of sub &chown_clone();
 
@@ -491,7 +485,7 @@ sub remove_volume {
           "      flexclone volume name = $flexclone_vol_name\n\n";
 
     #--------------------------------------- 
-    # check flexclone already exists - if not error
+    # check if flexclone exists - if not error
     #--------------------------------------- 
     # get list of flexclones from the vserver
     my %clone_list = &CeCommon::getFlexCloneList($naserver);
@@ -510,7 +504,7 @@ sub remove_volume {
 
 
     #--------------------------------------- 
-    # first make sure the volume is unmounted
+    # Step 1: Unmount the FlexClone volume
     #--------------------------------------- 
     $out = $naserver->invoke("volume-unmount",  "volume-name", $flexclone_vol_name);
 
@@ -526,7 +520,7 @@ sub remove_volume {
     print "INFO  ($progname): Flexclone volume <$flexclone_vol_name> successfully unmounted.\n";
 
     #--------------------------------------- 
-    # 2nd make sure the volume is offline
+    # Step 2: make sure the flexClone volume is offline
     #--------------------------------------- 
     $out = $naserver->invoke("volume-offline",  "name",  $clone_name);
 
@@ -542,7 +536,7 @@ sub remove_volume {
     print "INFO  ($progname): FlexClone volume <$clone_name> successfully taken offline.\n";
 
     #--------------------------------------- 
-    # 3rd remove/delete volume
+    # Step 3: remove/delete FlexClone volume
     #--------------------------------------- 
     $out = $naserver->invoke("volume-destroy",  "name",         $clone_name);
 
@@ -574,12 +568,19 @@ sub list_flexclones {
     my %vol_dedup_saved;
     my %vol_dedup_shared;
 
+    #---------------------------------------- 
+    # get list of all volumes 
+    #---------------------------------------- 
     my @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-get-iter" );
 
+    #---------------------------------------- 
+    # loop thru list of volumes and get specific volume attribute data
+    #---------------------------------------- 
     foreach my $tattr ( @vlist ) {
 	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
-    #print "DEBUG: volume-id-attributes\n";
-    #printf($tattr->sprintf());
+	#print "DEBUG: volume-id-attributes\n";
+	#printf($tattr->sprintf());
+
 	my $volume_name;
 	if ( $vol_id_attrs ) {
 	    $volume_name = $vol_id_attrs->child_get_string( "name" );
@@ -614,14 +615,14 @@ sub list_flexclones {
 	    if (defined $dedup_saved) {
 		$vol_dedup_saved{$volume_name}  = $dedup_saved;
 		$vol_dedup_shared{$volume_name} = $dedup_shared;
-		print "DEBUG: dedup saved: $volume_name saved=$vol_dedup_saved{$volume_name}  shared=$vol_dedup_shared{$volume_name}\n" if ($verbose);
 	    }
 	}
     }
 
-    # get volume clone info iteratively - it will return a list
-    @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-clone-get-iter" );
 
+    #---------------------------------------- 
+    # create report header
+    #---------------------------------------- 
     print "\nList FlexClones\n";
 	    #123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 
     printf  "%-25s %-30s %-29s ", "Parent Volume", "Parent-Snapshot", "FlexClone";
@@ -633,6 +634,11 @@ sub list_flexclones {
     printf  "  %s \n",            "Junction-path";
     print   "---------------------------------------------------------------------------------------" .
             "---------------------------------------------------------------------------------------------------\n"; 
+
+    #---------------------------------------- 
+    # get FlexCone info iteratively - it will return a list
+    #---------------------------------------- 
+    @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-clone-get-iter" );
 
     # for each clone entry
     foreach my $vol_data ( @vlist ) {
