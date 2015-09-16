@@ -2,15 +2,20 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
-CodeEasy_1.0.11-Alpha  (release date: 2015-09-15)
+CodeEasy_1.0.11-Alpha  (release date: 2015-09-16)
 ----------------------------------------
-    Fixed commented sub routine to call creating the flex clone.  
-    Added additional documentation to the QUICKSTART regarding sudo
-    permissions and the use of 'sur'.
+    - Fixed commented sub routine to call creating the flex clone.  
+    - Added additional documentation to the QUICKSTART regarding sudo permissions and the use of 'sur'.
+
+    - General code clean-up.
+    - Partically implemented running CeChownList.pl inside of CeCreateFlexClone.pl.  
+      This has not been tested and the sub has been commended out for now.
+
+    - cleaned up volume, snapshot, and flexclone volume existence checks using SDK calls.
 
 CodeEasy_1.0.10-Alpha  (release date: 2015-09-03)
 ----------------------------------------
-    Fixed incorrect snapshot existence check in CeCreateSnapshot.pl
+    - Fixed incorrect snapshot existence check in CeCreateSnapshot.pl
 
 
 CodeEasy_1.0.9-Alpha  (release date: 2015-09-02)
