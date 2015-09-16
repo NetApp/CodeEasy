@@ -81,8 +81,7 @@ sub init_filer {
     #           5.3.1 NMSDK use NaServer($host,1,7)
     # sets the name of the Storage Virtual Machine (SVM, formerly known as Vserver) 
     # to which a Cluster API need to be tunneled from a Cluster Management Interface.
-    print "\tVServer controler  = $CeInit::CE_VSERVER\n";
-    my $naserver = NaServer->new($CeInit::CE_VSERVER, 1, 21);
+    my $naserver = NaServer->new($CeInit::CE_VSERVER, 1, 7);
 
     # set API transport type - HTTP is the default
     $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE);
@@ -118,7 +117,7 @@ sub init_filer {
 
     # check that filer is running cDOT and not 7-mode
     if ( $out->child_get_string("is-clustered") eq "true") {
-	print "\nINFO  ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running cDOT.\n\n";
+	print "INFO  ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running cDOT.\n\n";
     } else {
 	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running in 7-mode\n" .
 	        "       These scripts support cDOT (Clustered Data OnTap) only\n" .

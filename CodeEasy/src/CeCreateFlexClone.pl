@@ -94,7 +94,7 @@ if (defined $list_snapshots) {
 #--------------------------------------- 
 # List Volumes - then exit
 #--------------------------------------- 
-&list_flexclones() if ($list_flexclones);
+&list_flexclones($naserver, $volume) if ($list_flexclones);
 
 #--------------------------------------- 
 # create flexclone
@@ -565,10 +565,8 @@ sub remove_volume {
 ###################################################################################   
 sub list_flexclones {
 
-    #--------------------------------------- 
-    # initialize access to NetApp filer
-    #--------------------------------------- 
-    my $naserver = &CeCommon::init_filer();
+    # pass arguments into sub-routine
+    my ($naserver) = @_;
 
     my %junction_path_map;
     my %comment_field_map;
