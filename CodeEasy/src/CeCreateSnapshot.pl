@@ -54,6 +54,7 @@ our $progname="CeCreateSnapshot.pl";    # name of this program
 our $volume;                       # cmdline arg: volume to create (default name: $CeInit::CE_DEFAULT_VOLUME_NAME)
 our $snapshot_name;                # cmdline arg: snapshot name to create
 our $snapshot_delete;              # cmdline arg: delete snapshot
+our $list_snapshots;               # cmdline arg: list available snapshots
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
@@ -75,6 +76,13 @@ our $naserver = &CeCommon::init_filer();
 # test connection to filer only...
 exit 0    if (defined $test_only);
 
+#--------------------------------------- 
+# list available snapshots
+#--------------------------------------- 
+if (defined $list_snapshots) {
+    &CeCommon::list_snapshots($naserver, $volume); # list available snapshots
+    exit 0;
+}
 
 #--------------------------------------- 
 # create snapshot
@@ -112,7 +120,7 @@ sub parse_cmd_line {
               'vol|volume=s'     => \$volume,            # volume to snapshot
 	      's|snapshot=s'     => \$snapshot_name,     # snapshot name
 
-	      'ls'                 => sub { &CeCommon::list_snapshots() }, # list available snapshots
+	      'ls'               => \$list_snapshots,    # list available snapshots
 
 	      'r|remove'         => \$snapshot_delete,   # remove snapshot
 

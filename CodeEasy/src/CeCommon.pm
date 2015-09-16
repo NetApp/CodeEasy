@@ -137,48 +137,28 @@ sub init_filer {
 ###################################################################################   
 sub list_snapshots {
 
+    # pass vserver handle and current volume into the sub
+    my ($naserver, $volume) = @_;
+
     my $snap_cnt      = 0;
     my $snap_skip_cnt = 0;
 
+    #--------------------------------------- 
+    # Get a list of the snapshots associated with the volume
+    #--------------------------------------- 
+    # vserver>  vol snapshot show -volume project_A_jenkin_build 
+    my %snapshot_list = ();
+    %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
 
-    # the snapshots can be found in the master directory
-    my $snap_dir = "$CeInit::CE_JUNCT_PATH_MASTER/.snapshot/";
-
-    # check that the snapshot directory exists
-    if (! -d $snap_dir) {
-	print "\nERROR ($main::progname) The master volume Snapshot directory not found!\n" .
-	        "      $snap_dir\n\n" .
-		"      Check the \$CE_JUNCT_PATH_MASTER/.snapshot/ setting in CeInit.pm\n" .
-	        "Exiting...\n\n";
-	exit 1;
-    }
-
-
-    my $cmd      = "ls $snap_dir";
-
-    # execute cmd and capture the stdout/stderr to $cmd_out
-    my $cmd_out = `$cmd`;
-
-    # check status of the system call
-    if ($? == 0) {
-
-    }  else {
-	print "ERROR: Could not find snapshot directories.\n" .
-	      "       $cmd\n" .
-	      "Exiting...\n";
-	exit 1;
-    }
-    chomp $cmd_out;
-    print "\nINFO  ($main::progname): Snapshot list for volume <$CeInit::CE_DEFAULT_VOLUME_NAME>\n";
+    print "\nINFO  ($main::progname): Snapshot list for volume '$volume'\n" .
+            "      (NOTE: hourly, daily and weekly snapshots not listed)\n";
 
     # loop thru list of snapshot directories 
-    foreach my $snap (sort split /^/, $cmd_out) {
-
-	# trip special characters off string
-        chomp $snap;
+    foreach my $snap (sort keys %snapshot_list) {
 
 	# skip regular snapshot - so only specifically named snapshots are shown
 	if ( ($snap =~ /^hourly/) || ($snap =~ /^daily/) || ($snap =~ /^weekly/) ) {
+	    print "skip...$snap\n" if (0);
 	    $snap_skip_cnt++;
 	    next;
 	}
@@ -192,7 +172,7 @@ sub list_snapshots {
 
     # report nice message if not snapshot directories found
     if ($snap_cnt ==0 ) {
-	print "\n      No snapshots found at $snap_dir\n";
+	print "\n      No snapshots found for volume '$volume'\n";
 	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
     }
 

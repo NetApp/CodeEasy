@@ -83,6 +83,13 @@ our $naserver = &CeCommon::init_filer();
 # test connection to filer only...
 exit 0    if (defined $test_only);
 
+#--------------------------------------- 
+# list available snapshots
+#--------------------------------------- 
+if (defined $list_snapshots) {
+    &CeCommon::list_snapshots($naserver, $volume); # list available snapshots
+    exit 0;
+}
 
 #--------------------------------------- 
 # List Volumes - then exit
@@ -143,8 +150,8 @@ sub parse_cmd_line {
 
 	      'r|remove'           => \$volume_delete,           # remove clone volume
 
-	      'ls'                 => sub { &CeCommon::list_snapshots() }, # list available snapshots
-	      'lc'                 => sub { &list_flexclones()}, # list current flexclone volumes
+	      'ls'                 => \$list_snapshots,          # list available snapshots
+	      'lc'                 => \$list_flexclones,         # list current flexclone volumes
 
 	      't|test'             => \$test_only,               # test filer connection then exit
 
@@ -166,6 +173,12 @@ sub parse_cmd_line {
 	      "      Exiting...\n\n";
 	exit 1;
     }
+
+    # no further GetOps input checking if we are just listing the available snapshots
+    return if (defined $list_snapshots);
+
+    # no further GetOps input checking if we are just listing the available flexclones
+    return if (defined $list_flexclones);
 
     # check that a snapshot was specified
     if (! defined $snapshot_name) {
@@ -384,20 +397,19 @@ sub clone_create {
     }
 
     #--------------------------------------- 
-    # check that the snapshot exists - if not error
+    # check if snapshot does not exists
     #--------------------------------------- 
-    # determine the full UNIX path to the parent snapshot
-    my $snapshot_path = "$CeInit::CE_UNIX_MASTER_VOLUME_PATH/.snapshot/$parent_snapshot";
-    if (-e $snapshot_path) {
-	print "DEBUG: Snapshot '$parent_snapshot' exists.\n" if ($verbose);
-    } else {
-	print "ERROR: Snapshot '$parent_snapshot' does not exist.\n" .
-	      "       List the available snapshots to clone using the '%> $progname -ls' command.\n" .
-	      "Exiting...\n\n";
+    # vserver>  vol snapshot show -volume project_A_jenkin_build 
+    my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
+
+    # check if the snapshot exists.
+    if (! defined $snapshot_list{$snapshot_name} ) {
+	print "\nERROR ($progname): Snapshot '$snapshot_name' does not exist on volume '$volume'.\n" .
+	        "      Check that you have specified the correct snapshot name.\n" .
+	        "      List the available snapshots to clone using the '%> $progname -ls' command.\n" .
+	        "Exiting...\n\n";
 	exit 1;
-    }
-
-
+    } 
 
     #--------------------------------------- 
     # create flexclone
