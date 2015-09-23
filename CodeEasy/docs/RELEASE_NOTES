@@ -7,6 +7,10 @@ CodeEasy_1.0.11-Alpha  (release date: 2015-09-16)
     - Fixed commented sub routine to call creating the flex clone.  
     - Added additional documentation to the QUICKSTART regarding sudo permissions and the use of 'sur'.
 
+    - Added document Continuous_Integration_with_NetApp_Technology_v2.docx.pdf 
+      This document helps explain the deeper scale out issues as well as
+      documents general maintenence tasks associated with this approach.
+
     - General code clean-up.
     - Partically implemented running CeChownList.pl inside of CeCreateFlexClone.pl.  
       This has not been tested and the sub has been commended out for now.
