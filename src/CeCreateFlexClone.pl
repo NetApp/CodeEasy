@@ -511,7 +511,7 @@ sub remove_volume {
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to unmount FlexClone volume $clone_name\n";
+        print "ERROR ($progname): Unable to unmount FlexClone volume $flexclone_vol_name\n";
         print "ERROR ($progname): volume-unmount returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n\n";
@@ -522,34 +522,34 @@ sub remove_volume {
     #--------------------------------------- 
     # Step 2: make sure the flexClone volume is offline
     #--------------------------------------- 
-    $out = $naserver->invoke("volume-offline",  "name",  $clone_name);
+    $out = $naserver->invoke("volume-offline",  "name",  $flexclone_vol_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to take FlexClone volume $clone_name offline\n";
+        print "ERROR ($progname): Unable to take FlexClone volume $flexclone_vol_name offline\n";
         print "ERROR ($progname): volume-offline returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n\n";
         exit 1;
     }
-    print "INFO  ($progname): FlexClone volume <$clone_name> successfully taken offline.\n";
+    print "INFO  ($progname): FlexClone volume <$flexclone_vol_name> successfully taken offline.\n";
 
     #--------------------------------------- 
     # Step 3: remove/delete FlexClone volume
     #--------------------------------------- 
-    $out = $naserver->invoke("volume-destroy",  "name",         $clone_name);
+    $out = $naserver->invoke("volume-destroy",  "name", $flexclone_vol_name);
 
     # check status of the invoked command
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($progname): Unable to remove/destroy FlexClone volume $clone_name \n";
+        print "ERROR ($progname): Unable to remove/destroy FlexClone volume $flexclone_vol_name\n";
         print "ERROR ($progname): volume-destroy returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n\n";
         exit 1;
     }
-    print "INFO  ($progname): FlexClone volume <$clone_name> successfully removed.\n";
+    print "INFO  ($progname): FlexClone volume <$flexclone_vol_name> successfully removed.\n";
 
 } # end of sub remove_volume()
 
