@@ -5,7 +5,40 @@
 ****************************************
    Introduction 
 ****************************************
-The challenge for developers who work with large volumes of data such as multimedia assets, video game art, and firmware designs, etc, is the ability to get a quick copy of source and build assets. By combining the technologies of Perforce and NetApp, a new Perforce workspace can be created in minutes instead of hours.  Perforce in collaboration with NetApp has developed a p4 broker script written in python that allows users to create workspaces quickly using NetApp FlexClone technology.
+The challenge for developers who work with large volumes of data such as 
+multimedia assets, video game art, and firmware designs, etc, is the ability 
+to get a quick copy of source and build assets. By using NetApp Snapshot 
+and FlexClone technologies  a new workspace can be created in minutes instead of hours.
+
+I want to introduce you to CodeEasy, NetApp's methodology for DevOps. CodeEasy
+utilizes NetApp's FlexClone technology to save TB of Developer workspaces and
+save developers hours of time by reducing the time to checkout and build their
+workspaces.  NetApp's own internal DevOps team has been using CodeEasy for 7
+years and we have recently packaged up CodeEasy into an Evaluation Kit for
+easy adoption by our customers.
+ 
+CodeEasy is a methodology for DevOps which utilizes NetApp?s SnapShot and FlexClone 
+technologies to dramatically save developer checkout and build time while also 
+significantly decreasing storage usage. The CodeEasy evaluation kit utilizes the 
+NetApp Manageabilitys SDK to automate the steps required to create and manage 
+developer FlexClone workspaces.  The best thing is CodeEasy fits into most DevOps 
+environments with little to no changes.  
+
+The CodeEasy eval kit is so easy, that within 2 hours , you can see both the time 
+and storage savings found by utilizing NetApp technologies.  By trying a few scripts 
+from any code management tool (git, svn, perforce or any home grown system), and 
+using NetApp?s FlexClone technology (which you already use), we can accelerate 
+dev-to-production cycles, and minimize the resources needed for every dev/test environment, 
+lowering the toll on the storage system and allowing you to run more such systems in 
+parallel. It also makes cleanup much faster and tighter. 
+
+A few examples: 
+- NetApp's internal SW organization has been using CodeEasy for over 7 year.  
+  Our figures show that using CodeEast saves roughly 100 man years per year.
+
+- A Silicon Valley network chip manufacturer was able to reduce their checkout and build time 
+  from about 55 minutes to 5 minutes and at the save time save an average of 200GB 
+  per developer workspace. 
  
 ****************************************
   Scope 
