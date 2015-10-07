@@ -1,37 +1,47 @@
 ############################################################
 # Example Project Structure used in the QuickStart example.
 ############################################################
+This document trys to describe how the example project is layed out from a UNIX point
+of view, then from a cDOT filer point of view and finally the cDOT junction
+paths.  
+
+It is important to take time to create a map like this for your specific
+project(s). It will help you understand how UNIX, filer and junction paths map
+to each other.  
+
+UNIX Mount/Automount - the only volume mounted is volume 'ce_projects'.  In
+this CodeEasy example, volume ce_projects is mounted at '/', so a user can 
+    %> cd /ce_project/project_C/
 
 
-
-
-Project Directory Structure (UNIX View)                    Filer View                    Junction Path
-===========================                                ===============               =================
-ce_projects                                                ce_projects (volume)          /ce_projects
-├── project_A                                              project_A (qtree)             /ce_projects/project_A
-├── project_B                                              project_B (qtree)             /ce_projects/project_B
-└── project_C                                              project_C (qtree)             /ce_projects/project_C
-    ├── jenkin_build                                       project_C_jenkin_build        /ce_projects/project_C/jenkin_build
-        └── <project contents>                             <project files/directories>   
-    ├── nightly_regression                                 project_C_nightly_regression  /ce_projects/project_C/nightly_regression
-    ├── release_builds                                     project_C_release_builds      /ce_projects/project_C/release_builds
-    └── users                                              qtree or UNIX dir             qtree or UNIX dir
-        ├── cptmorgan                                      qtree or UNIX dir             qtree or UNIX dir
-        │   ├── project_C_snap2_clone                      project_C_snap2_clone         /ce_projects/project_C/users/cptmorgan/project_C_snap2_clone
-        │   ├── project_C_snap3_clone                      ...                           ...
-        │   └── project_C_snap4_clone                      project_C_snap4_clone         /ce_projects/project_C/users/cptmorgan/project_C_snap4_clone
-        │       └── <project contents>                     <cloned version of project files/directories>   
-        ├── jackdaniels                                    ...
-        │   ├── project_C_snap2_clone
-        │   ├── project_C_snap5_clone
-        │   └── project_C_snap6_clone
+Project Directory Structure 
+UNIX View                                 Filer View                                  Junction Path
+===========================               ===============                             =================
+ce_projects                               ce_projects (volume)                        /ce_projects
+├── project_A                             project_A   (qtree or UNIX dir)             /ce_projects/project_A
+├── project_B                             project_B   (qtree or UNIX dir)             /ce_projects/project_B
+└── project_C                             project_C   (qtree or UNIX dir)             /ce_projects/project_C
+    ├── jenkin_build                      project_C_jenkin_build       (volume)       /ce_projects/project_C/jenkin_build
+        └── <project contents>            <project files/directories>                 
+    ├── nightly_regression                project_C_nightly_regression (volume)       /ce_projects/project_C/nightly_regression
+    ├── release_builds                    project_C_release_builds     (volume)       /ce_projects/project_C/release_builds
+    └── users                             users     (qtree or UNIX dir)                         
+        ├── cptmorgan                     cptmorgan (qtree or UNIX dir)                        
+        │   ├── jenkin_snap2_clone        project_C_jenkin_snap2_clone (flexclone)    /ce_projects/project_C/users/cptmorgan/jenkin_snap2_clone
+        │   ├── jenkin_snap3_clone        ...                                         ...
+        │   └── jenkin_snap4_clone        project_C_jenkin_snap4_clone (flexclone)    /ce_projects/project_C/users/cptmorgan/jenkin_snap4_clone
+        │       └── <project contents>    <cloned of jenkin_build files/directories>   
+        ├── jackdaniels                   ...
+        │   ├── jenkin_snap2_clone
+        │   ├── jenkin_snap5_clone
+        │   └── jenkin_snap6_clone
         ├── jameson
-        │   ├── project_C_snap3_clone
-        │   └── project_C_snap4_clone
-        └── josecuervo
-            ├── project_C_snap1_clone
-            ├── project_C_snap2_clone
-            └── project_C_snap3_clone
+        │   ├── jenkin_snap3_clone
+        │   └── nightly_snap4_clone
+        └── josecuervo                        Example below of how clones can be created for all three build types
+            ├── jenkin_snap1_clone
+            ├── nightly_snap2_clone           
+            └── release_snap3_clone
          
 
 QTREE vs UNIX directories

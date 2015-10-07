@@ -2,6 +2,16 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.1.0-Beta    (release date: 2015-10-06)
+----------------------------------------
+    - Fixed deleting of FlexClones when FC volume name and the junction path
+      volume names are different.  
+    - Updated README to include information about how to get support for this
+      kit.
+
+    - Moved CodeEasy to a private Git/Github 
+    - Updated release to Beta status 
+
 CodeEasy_1.0.11-Alpha  (release date: 2015-09-16)
 ----------------------------------------
     - Fixed commented sub routine to call creating the flex clone.  

@@ -2,6 +2,29 @@
 - CodeEasy Evaluation Kit - README
 --------------------------------------------------------------------------------
 
+Support
+----------------------------------------
+The CodeEasy/FlexClone for DevOps evaluation kit is provided as an example of
+how to use NetApp Snapshots and FlexClones to quickly create developer
+workspaces.  This evaluation kit is an example of how to get started - it is
+not intended to be a robust fully featured flow.
+
+It is expected that customers will use the flow to learn how to use the NetApp
+Manageability SDK to automate the creation of Volumes, Snapshots and
+FlexClones.  Every customer environment will have unique requirements - so it
+is expected that each customer will create and support thier own custom implementation.
+
+Support is available for this kit, with the understanding that this is an
+example/reference flow and not a robust one size fits all solution.  This kit
+is NOT formally supported thru the standard NetApp support system. 
+
+For questions regarding this version of the CodeEasy release email
+michael.johnson@netapp.com
+
+Check the NetApp Support ToolChest website for updated versions of the
+CodeEasy evaluation kit. https://mysupport.netapp.com/tools/index.html
+
+
 Installation Instructions
 ----------------------------------------
 1. Untar the eval kit tarball
