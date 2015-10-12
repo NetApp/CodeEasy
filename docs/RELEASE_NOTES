@@ -2,6 +2,11 @@
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
 
+CodeEasy_1.1.0         (release date: 2015-10-12)
+----------------------------------------
+    - Name/version change to remove Beta status for release to NetApp
+      Toolchest website.
+
 CodeEasy_1.1.0-Beta    (release date: 2015-10-06)
 ----------------------------------------
     - Fixed deleting of FlexClones when FC volume name and the junction path
