@@ -1,6 +1,6 @@
 /*
 ################################################################################
-# CodeEasy Customer Evaluation Script
+# CodeEasy Customer Toolkit Script
 #          This script was developed by NetApp to help demonstrate NetApp 
 #          technologies.  This script is not officially supported as a 
 #          standard NetApp product.

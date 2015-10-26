@@ -8,7 +8,7 @@
 # Long term, this file could be replaced by a project config (.cfg) or (.xml)
 # file whic contains the same information but in a loadable text format.  This
 # was not implemented because the file parsing just adds additional complexity
-# to this simple CodeEasy Eval Kit implementation.
+# to this simple CodeEasy Toolkit implementation.
 #
 ################################################################################
 
