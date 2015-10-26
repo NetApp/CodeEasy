@@ -1,12 +1,12 @@
 --------------------------------------------------------------------------------
-- CodeEasy Evaluation Kit - README
+- CodeEasy Toolkit - README
 --------------------------------------------------------------------------------
 
 Support
 ----------------------------------------
-The CodeEasy/FlexClone for DevOps evaluation kit is provided as an example of
+The CodeEasy/FlexClone for DevOps Toolkit is provided as an example of
 how to use NetApp Snapshots and FlexClones to quickly create developer
-workspaces.  This evaluation kit is an example of how to get started - it is
+workspaces.  This Toolkit is an example of how to get started - it is
 not intended to be a robust fully featured flow.
 
 It is expected that customers will use the flow to learn how to use the NetApp
@@ -22,12 +22,12 @@ For questions regarding this version of the CodeEasy release email
 michael.johnson@netapp.com
 
 Check the NetApp Support ToolChest website for updated versions of the
-CodeEasy evaluation kit. https://mysupport.netapp.com/tools/index.html
+CodeEasy Toolkit. https://mysupport.netapp.com/tools/index.html
 
 
 Installation Instructions
 ----------------------------------------
-1. Untar the eval kit tarball
+1. Untar the Toolkit tarball
    %> tar zxvf CodeEasy_x.x.x.tgz
 
 2. Download the NetApp Manageability SDK 5.4 from the support.netapp.com site

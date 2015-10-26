@@ -1,6 +1,11 @@
 --------------------------------------------------------------------------------
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
+CodeEasy_1.1.1         (release date: 2015-10-26)
+----------------------------------------
+    - Name/version change in docs from Eval kit to Toolkit in preparation
+      for release to the www.support.netapp.com -> Toolchest site.
+      No functionality changes in this release.
 
 CodeEasy_1.1.0         (release date: 2015-10-12)
 ----------------------------------------

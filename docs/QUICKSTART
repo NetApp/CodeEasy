@@ -14,17 +14,17 @@ I want to introduce you to CodeEasy, NetApp's methodology for DevOps. CodeEasy
 utilizes NetApp's FlexClone technology to save TB of Developer workspaces and
 save developers hours of time by reducing the time to checkout and build their
 workspaces.  NetApp's own internal DevOps team has been using CodeEasy for 7
-years and we have recently packaged up CodeEasy into an Evaluation Kit for
+years and we have recently packaged up CodeEasy into an Toolkit for
 easy adoption by our customers.
  
 CodeEasy is a methodology for DevOps which utilizes NetApp?s SnapShot and FlexClone 
 technologies to dramatically save developer checkout and build time while also 
-significantly decreasing storage usage. The CodeEasy evaluation kit utilizes the 
+significantly decreasing storage usage. The CodeEasy Toolkit utilizes the 
 NetApp Manageabilitys SDK to automate the steps required to create and manage 
 developer FlexClone workspaces.  The best thing is CodeEasy fits into most DevOps 
 environments with little to no changes.  
 
-The CodeEasy eval kit is so easy, that within 2 hours , you can see both the time 
+The CodeEasy Toolkit is so easy, that within 2 hours , you can see both the time 
 and storage savings found by utilizing NetApp technologies.  By trying a few scripts 
 from any code management tool (git, svn, perforce or any home grown system), and 
 using NetApp?s FlexClone technology (which you already use), we can accelerate 
@@ -43,14 +43,14 @@ A few examples:
 ****************************************
   Scope 
 ****************************************
-The CodeEasy Eval Kit scripts are an open-source shared with the developer community to refine and customized. Each development environment is unique and may have requirements of security, control, workflow, etc. Thus this script is meant to be only as a starting reference which can be enhanced to support requirements of your specific development environment.
+The CodeEasy Toolkit scripts are an open-source shared with the developer community to refine and customized. Each development environment is unique and may have requirements of security, control, workflow, etc. Thus this script is meant to be only as a starting reference which can be enhanced to support requirements of your specific development environment.
 
 Support for this script is through the NetApp community forums. Questions and issues should be posted there for further guidance.  
 
 ****************************************
   Requirements  
 ****************************************
-In order to be able to utilize CodeEasy Eval Kit the following is required:
+In order to be able to utilize CodeEasy Toolkit the following is required:
 
 - cDot 8.2 or later (7-mode is not supported)
 - NetApp Manageability Software Development Kit (NMSDK) 5.3.x or later
@@ -58,7 +58,7 @@ In order to be able to utilize CodeEasy Eval Kit the following is required:
 ****************************************
   Support 
 ****************************************
-Currently the CodeEasy EvalKit is only supported for Unix environments and NFS.
+Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 
 ****************************************
   Installation
@@ -71,20 +71,20 @@ Currently the CodeEasy EvalKit is only supported for Unix environments and NFS.
 
 	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.4.zip
 
-    STEP 2: Place the CodeEasy evalkit and the SDK next to each other.
+    STEP 2: Place the CodeEasy Toolkit and the SDK next to each other.
 	%> cd <workspace>
 	%> unzip netapp-manageability-sdk-5.4.zip
 
-    STEP 3: Download and untar the CodeEasy evalkit
-	%> tar -zxvf CodeEasy_1.x.x-Alpha.tgz
+    STEP 3: Download and untar the CodeEasy Toolkit
+	%> tar -zxvf CodeEasy_1.x.x.tgz
 
     The final directory structure should look something like.
     <workspace>/
     	netapp-manageability-sdk-5.4/
-	CodeEasy_1.x.x-Alpha/
+	CodeEasy_1.x.x/
 
-    The CodeEasy Perl scripts assume the SDK is at the same level as the eval
-    kit.  This can be change by editing the .pl script if a different location
+    The CodeEasy Perl scripts assume the SDK is at the same level as the Toolkit.
+    This can be change by editing the .pl script if a different location
     is desired.
 
     NOTE: If the SDK is installed in a different location, edit the path in
@@ -345,7 +345,7 @@ directories.
 
 Since there are potentially millions of files and directories in the volume,
 the time to 'chown' the volume can be quite significant - potentially hours.
-The CodeEasy eval kit contains optimized scripts for speeding up the process
+The CodeEasy Toolkit contains optimized scripts for speeding up the process
 of chown'ing the files.  The first speed up comes from the use of fast_chown.c
 which uses lchown which runs faster then conventional UNIX chown.  Second the
 process of finding the files to chown has been split from the process of
@@ -378,8 +378,8 @@ file
     # this will enable user to run command without requiring a password.
     devops  ALL=(ALL) NOPASSWD: ALL
 
-The sur.c program command is a script which is provided by the CodeEasy eval
-kit to enable a normal user to switch to user 'devops' to run commands like
+The sur.c program command is a script which is provided by the CodeEasy Toolkit
+to enable a normal user to switch to user 'devops' to run commands like
 creating a flex clone or chowning a volume.  The compiled program 'sur'
 essentially does a ?setuid? then runs the called script.  
 Example:
