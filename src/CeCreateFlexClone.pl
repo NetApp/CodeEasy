@@ -331,35 +331,28 @@ sub clone_create {
     # CE_JUNCT_PATH_USERS vs the CE_JUNCT_PATH_MASTER
     my $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
 
-    # place the FlexClone owner in the comment field so it can be tracked.
-    # This can be any information which might make sense.
-    # NOTE: 8.2.x does not support the comment field in the
-    # volume-clone-create command - but the comment field exists - its just
-    # not setable. 
-    my $comment_field = $username;
-
     print "INFO  ($progname): Creating FlexClone volume\n" .
           "      flexclone volume name = $flexclone_vol_name\n" .
           "      parent-volume         = $volume\n" .
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
-	  "      Comment (clown owner) = <$comment_field>\n\n";
                   
 
     #--------------------------------------- 
     # check that the volume already exists - if not error
     #--------------------------------------- 
     # get list of volumes from the vserver
-    my %volume_list = &CeCommon::getVolumeList($naserver);
+    my %vol_list = ();
+    %vol_list = &CeCommon::getVolumeList($naserver);
 
     # check that the volume to clone is in the list of volumes available
-    if (defined $volume_list{$volume} ) {
+    if (defined $vol_list{$volume} ) {
 	# the master volume must exist to clone 
 	print "DEBUG: Volume '$volume' to clone exists\n" if ($verbose);
     } else {
         # if not, then generate an error
-	print "ERROR: Volume to clone does not exist.\n" .
+	print "\nERROR: Volume to clone does not exist.\n" .
 	      "       Check that volume '$volume' exists and has a valid snapshot.\n" .
 	      "       Exiting...\n\n";
 	exit 1;
@@ -402,11 +395,9 @@ sub clone_create {
     $out = $naserver->invoke("volume-clone-create", "parent-volume",   $volume, 
                                                     "parent-snapshot", $parent_snapshot,
                                                     "volume",          $flexclone_vol_name,
-						    "junction-path",   $junction_path,
+						    "junction-path",   $junction_path, 
+						    "space-reserve",   'none',
 						    );
-						    # the "comment" field is not supported in the API, but it is available
-						    # on the cDOT cmd line. Hopefully this will be supported in the future.
-						    #"comment",         $comment_field
 
     # check status of the invoked command
     $errno = $out->results_errno();

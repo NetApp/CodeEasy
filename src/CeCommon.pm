@@ -44,7 +44,8 @@ use warnings;
 #---------------------------------------- 
 # SDK setenv not set, assume the SDK is in parallel to the CodeEasy
 # tarball installation    ***** CUSTOMIZE ME *****
-use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
+#use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
+use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.3.1/lib/perl/NetApp";
 # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
 
 # load the NetApp Manageability SDK components
@@ -257,7 +258,7 @@ sub getVolumeList {
     # pass naserver handle into the sub
     my ($naserver) = @_;
 
-    my %volume_list;
+    my %volume_list = ();
 
     # get list of volume data
     my @vlist = &CeCommon::vGetcDOTList( $naserver, "volume-get-iter" );
@@ -277,7 +278,7 @@ sub getVolumeList {
 	    # store volume in list which is easy to access via hash
 	    $volume_list{$volume_name} = 1;
 
-	    print "       $volume_name \n" if ($main::verbose);
+	    print "       $volume_name\n" if ($main::verbose);
 	}
     }
 
