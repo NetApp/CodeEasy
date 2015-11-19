@@ -1,6 +1,20 @@
 --------------------------------------------------------------------------------
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
+
+CodeEasy_1.1.2         (release date: 2015-11-18)
+----------------------------------------
+    - Add CeSplitClone.pl script to demonstrate how to split a clone from a
+      parent volume/snapshot pair.
+
+    - Added "space-reserve",   'none',   Option to volume-clone-create option
+      to force flexclones to be thin provisioned.  By default, FlexClones will 
+      take on the thick/thin provisioning settings of parent volume.  
+
+    - Added FAQ_doc file which includes a list of Frequently Asked Question.
+
+
+
 CodeEasy_1.1.1         (release date: 2015-10-26)
 ----------------------------------------
     - Name/version change in docs from Eval kit to Toolkit in preparation
