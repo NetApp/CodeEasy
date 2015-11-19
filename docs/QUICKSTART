@@ -381,10 +381,9 @@ file
 The sur.c program command is a script which is provided by the CodeEasy Toolkit
 to enable a normal user to switch to user 'devops' to run commands like
 creating a flex clone or chowning a volume.  The compiled program 'sur'
-essentially does a ?setuid? then runs the called script.  
+essentially does a 'setuid' then runs the called script.  
 Example:
-    %jmichae1> ~jmichae1/CodeEasy/src/sur devops
-    %~jmichae1/CodeEasy/src/CeChownList.pl -d $PWD -u jmichae1
+    %jmichae1> ~jmichae1/CodeEasy/src/sur devops CeChownList.pl -d $PWD -u jmichae1
 
 In the above example sur will setuid to user devops, then call the
 CeChownList.pl script to chown the files to user jmichae1.  Note that the UNIX
