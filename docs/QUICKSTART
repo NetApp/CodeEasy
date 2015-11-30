@@ -158,8 +158,9 @@ command does not work, then CeChownFile.pl will not work either.
 
     Step #2 NFS mount top level project volume (or edit /etc/fstab or update automount)
        New volumes and flexclones will use junction paths relative to this mount point. 
+       The following mounts using nfsv3
 
-       UNIX %> sudo mount -t nfs vserver:/ce_projects /ce_projects
+       UNIX %> sudo mount -t nfs vserver:/ce_projects /ce_projects -o nfsvers=3
 
        Change permissions so users can access this volume
             %> sudo chmod 777 /ce_projects
