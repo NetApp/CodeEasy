@@ -1,6 +1,18 @@
 --------------------------------------------------------------------------------
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
+CodeEasy_1.1.3         (release date: 2016-03-20)
+    - CodeEasy is now released at https://github.com/NetApp/CodeEasy/
+
+    - Changed filer login to user the Cluster interface vserver pair instead
+      of direct vserver access.  This is the prefered access model.
+
+    - Updated QUICKSTART guide to list additional Cluster configuration
+      requirements to enable NMSDK access.
+
+      # IMPORTANT: critical setup for Cluster Interface access
+      #   network interface modify -vserver <vserver> -lif <lif> -firewall-policy mgmt
+      #   vserver modify -vserver <vserver> -aggr-list <aggrname>
 
 CodeEasy_1.1.2         (release date: 2015-11-18)
 ----------------------------------------
