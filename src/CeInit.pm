@@ -21,20 +21,28 @@ package CeInit;
 ########################################
     # NetApp vserver admin access usr/pass pair
     # admin permissions to access filer 
-    # IMPORTANT: the vserver admin must have 'ontapi' application access
-    #            this login access to the vserver and not to the cluster.
+    # IMPORTANT: the admin user must have 'ontapi' application access
+    #            this login access to the vserver via the cluster interface.
     #            Check permission access
     #            cluster> security login show
     #
-    #   SDK API Example:  $naserver->set_admin_user("vsadmin", "devops123");
-    our $CE_STYLE           = "LOGIN";           # Sets the authentication mechanism to be used for communicating with the given server.
-                                                 # default is 'LOGIN'
-    our @CE_ADMIN_USER      = ("devops","netapp123");
 
-    our $CE_VSERVER         = "10.45.84.128";    # name of the vserver port
-    our $CE_TRANSPORT_TYPE  = "HTTP";            # The default transport type is HTTP. For secure transport, use HTTPS as the transport type.
-    our $CE_PORT            = "80";              # Sets the port on which the API commands need to be invoked for the given server context
-                                                 # HTTP -> use port 80, HTTPS -> use port 443
+    # IMPORTANT: critical setup for Cluster Interface access
+    #   network interface modify -vserver <vserver> -lif <lif> -firewall-policy mgmt
+    #   vserver modify -vserver <vserver> -aggr-list <aggrname>
+     
+
+    our $CE_CLUSTER         = "winfclus03";         # name of the cluster port
+    our @CE_ADMIN_USER      = ("demo","Netapp123"); # cluster login (username,password)
+    # SDK API Example:  $naserver->set_admin_user("cluster_admin", "netapp123");
+
+    our $CE_VSERVER         = "bryan-svm-84-128";   # name of the vserver port
+
+    our $CE_STYLE           = "LOGIN";              # Sets the authentication mechanism to be used for communicating with the given server.
+                                                    # default is 'LOGIN'
+    our $CE_TRANSPORT_TYPE  = "HTTP";               # The default transport type is HTTP. For secure transport, use HTTPS as the transport type.
+    our $CE_PORT            = "80";                 # Sets the port on which the API commands need to be invoked for the given server context
+                                                    # HTTP -> use port 80, HTTPS -> use port 443
 
     # default volume name - is the default used by CeCreateSnapshot and CeCreateFlexClone
     our $CE_DEFAULT_VOLUME_NAME    = "project_A_jenkin_build";
@@ -144,7 +152,7 @@ package CeInit;
 # Export variable for use by flow
 ########################################
 our @EXPORT = qw(@CE_ADMIN_USER$
-                 $CE_VSERVER 
+                 $CE_CLUSTER $CE_VSERVER 
 		 $CE_STYLE
                  $CE_TRANSPORT_TYPE $CE_PORT
                  $CE_DEVOPS_USER

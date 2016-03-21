@@ -74,14 +74,19 @@ sub init_filer {
     #--------------------------------------- 
     # initialize access to NetApp filer
     #--------------------------------------- 
-    print "\nINFO  ($main::progname): Connecting to storage controler/vserver\n";
+    print "\nINFO  ($main::progname): Connecting to storage...\n" .
+            "      Cluster: $CeInit::CE_CLUSTER\n" .
+            "      Vserver: $CeInit::CE_VSERVER\n\n";
 
     # Creates a new object of NaServer class and sets the default value for the following object members:
     #   syntax: new($server, $majorversion, $minorversion)
     #           5.3.1 NMSDK use NaServer($host,1,7)
-    # sets the name of the Storage Virtual Machine (SVM, formerly known as Vserver) 
-    # to which a Cluster API need to be tunneled from a Cluster Management Interface.
-    my $naserver = NaServer->new($CeInit::CE_VSERVER, 1, 7);
+    # sets the name of the Storage cluster to which a Cluster API need to 
+    # be tunneled from a Cluster Management Interface.
+    my $naserver = NaServer->new($CeInit::CE_CLUSTER, 1, 7);
+
+    # set vserver to access
+    $naserver->set_vserver("$CeInit::CE_VSERVER");
 
     # set API transport type - HTTP is the default
     $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE) if (defined $CeInit::CE_TRANSPORT_TYPE);
@@ -104,7 +109,7 @@ sub init_filer {
     # check error status and exit if basic communication with the filer can't be estabilished.
     $errno = $out->results_errno();
     if ($errno) {
-        print "ERROR ($main::progname): FAIL: Unable to connect to $CeInit::CE_VSERVER \n";
+        print "ERROR ($main::progname): FAIL: Unable to connect to cluster/vserver: $CeInit::CE_CLUSTER/$CeInit::CE_VSERVER \n";
         print "ERROR ($main::progname): system-get-version returned with $errno and reason: " . 
 	                          '"' .  $out->results_reason() . "\n";
         print "ERROR ($main::progname): Exiting with error.\n";
@@ -116,14 +121,14 @@ sub init_filer {
     # Example:       NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
     #--------------------------------------- 
     $main::cdot_version = $out->child_get_string("version");
-    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running ONTAP API version:\n" . 
+    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running ONTAP API version:\n" . 
           "      $main::cdot_version\n\n";
 
     # check that filer is running cDOT and not 7-mode
     if ( $out->child_get_string("is-clustered") eq "true") {
-	print "INFO  ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running cDOT.\n\n";
+	print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running cDOT.\n\n";
     } else {
-	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_VSERVER> is running in 7-mode\n" .
+	print   "ERROR ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running in 7-mode\n" .
 	        "       These scripts support cDOT (Clustered Data OnTap) only\n" .
 	        "Exiting...\n";
 	exit 1;

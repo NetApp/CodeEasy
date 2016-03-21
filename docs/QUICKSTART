@@ -141,6 +141,14 @@ command does not work, then CeChownFile.pl will not work either.
 
         cluster::> security login show
 
+****************************************
+  IMPORTANT: Critical setup for Cluster Interface access
+             If this is not done, you will get a login/connection error
+****************************************
+        cluster::> network interface modify -vserver <vserver> -lif <lif> -firewall-policy mgmt
+        cluster::> vserver modify -vserver <vserver> -aggr-list <aggrname>
+
+
 
 ****************************************
   Setup Project Volumes
