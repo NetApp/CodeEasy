@@ -5,7 +5,8 @@ CodeEasy_1.1.3         (release date: 2016-03-20)
     - CodeEasy is now released at https://github.com/NetApp/CodeEasy/
 
     - Changed filer login to user the Cluster interface vserver pair instead
-      of direct vserver access.  This is the prefered access model.
+      of direct vserver access.  This is the prefered access model. Changes
+      were limited to CeInit.pm and CeCommon.pm files.
 
     - Updated QUICKSTART guide to list additional Cluster configuration
       requirements to enable NMSDK access.
