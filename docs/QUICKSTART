@@ -67,20 +67,20 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 	The SDK can be found on the mysupport.netapp.com 
 	Downloads -> Software -> NetApp Manageability SDK
 	Select "All Platforms" -> Go!
-	Select "NetApp Manageability SDK 5.4" -> View & Download
+	Select "NetApp Manageability SDK 5.5" -> View & Download
 
-	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.4.zip
+	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.5.zip
 
     STEP 2: Place the CodeEasy Toolkit and the SDK next to each other.
 	%> cd <workspace>
-	%> unzip netapp-manageability-sdk-5.4.zip
+	%> unzip netapp-manageability-sdk-5.5.zip
 
     STEP 3: Download and untar the CodeEasy Toolkit
 	%> tar -zxvf CodeEasy_1.x.x.tgz
 
     The final directory structure should look something like.
     <workspace>/
-    	netapp-manageability-sdk-5.4/
+    	netapp-manageability-sdk-5.5/
 	CodeEasy_1.x.x/
 
     The CodeEasy Perl scripts assume the SDK is at the same level as the Toolkit.
@@ -89,8 +89,8 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 
     NOTE: If the SDK is installed in a different location, edit the path in
     the CeCommon.pm file to use the correct path.
-    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
-    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
+    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.5/lib/perl/NetApp";
+    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.5/lib/perl/NetApp";
     
 
 ****************************************
@@ -288,7 +288,7 @@ command does not work, then CeChownFile.pl will not work either.
 	purposes of this initial testing without a RCS tool, we can just copy a
 	bunch of files - of significant size - to the new volume.
 
-	%> cp -R netapp-manageability-sdk-5.4 /ce_projects/project_A/jenkin_build/
+	%> cp -R netapp-manageability-sdk-5.5 /ce_projects/project_A/jenkin_build/
 
     Step #4: Create a file list to be later when changing ownership of the flexclone
 

@@ -44,8 +44,8 @@ use warnings;
 #---------------------------------------- 
 # SDK setenv not set, assume the SDK is in parallel to the CodeEasy
 # tarball installation    ***** CUSTOMIZE ME *****
-use lib "/home/jmichae1/netapp-manageability-sdk-5.4P1/lib/perl/NetApp";
-# use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
+use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.5/lib/perl/NetApp";
+# use lib "<your_full_path>/netapp-manageability-sdk-5.5/lib/perl/NetApp";
 
 # load the NetApp Manageability SDK components
 use NaServer;      
