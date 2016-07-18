@@ -15,6 +15,9 @@ CodeEasy_1.1.4         (release date: 2016-07-18)
 
     - Updated QUICKSTART guide and CeCommon.pm to reference NMSDK 5.5 and later.
 
+    - Added information about the jexplore.jar utility for testing NMSDK API access 
+      independently of the CodeEasy scripts.  %> java -jar <NMSDK>/zedi/jexplore.jar 
+
 
 CodeEasy_1.1.3         (release date: 2016-03-20)
 ----------------------------------------

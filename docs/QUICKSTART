@@ -226,13 +226,19 @@ command does not work, then CeChownFile.pl will not work either.
 
 	INFO  (CeCreateSnapshot.pl): Reconnecting to filer using ONTAP API version 1.32
 
+	INFO  (CeCreateSnapshot.pl): Test ONTAP API access connectivity only...exiting.
 
 
 
     Resolve Errors
+    ----------------------------------------
     If the test option returns an error, most likely it is due to misconfigured options in the 
     CeInit.pm file. Check that the vserver user login has both ontapi and ssh access permissions 
     enabled.  
+
+    
+    Use the jexplore.jar utility to test the NMSDK API access independent of the scripts
+    %> java -java <NMSDK>/zedi/jexplore.jar
 
 
 ****************************************
