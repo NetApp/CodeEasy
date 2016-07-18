@@ -127,7 +127,7 @@ command does not work, then CeChownFile.pl will not work either.
 ****************************************
   ONTAPI filer permission setup
 ****************************************
-    To enable filer access via the NetApp Manageability SDK vserver
+    To enable filer access via the NetApp Manageability SDK 
     permissions must be setup to enable 'ontapi' and 'ssh' access permissions.
 
     Read the file ONTAPI_SETUP file in the CodeEasy/docs directory for full
@@ -198,7 +198,7 @@ command does not work, then CeChownFile.pl will not work either.
     ----------------------------------------
     Open and edit the file CeInit.pm
 
-    The CeInit.pm file contains all the default values for UNIX and vserver
+    The CeInit.pm file contains all the default values for UNIX and ONTAP Cluster/Vserer
     setup.  The file is well commented, so read thru the file and edit each
     line as required to localize the script to your environment. 
 
@@ -212,11 +212,22 @@ command does not work, then CeChownFile.pl will not work either.
     Example:
     %> cd <codeeasy dir>/src
     %> ./CeCreateSnapshot -test
-	INFO  (CeCreateSnapshot.pl): Connecting to storage controler/vserver
-		vserver        = sv5-devops-01
-		transport_type = HTTP
-	INFO  (CeCreateSnapshot.pl): Storage Controller <sv5-devops-01> is running ONTAP API version:
-	      NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
+	INFO  (CeCreateSnapshot.pl): Connecting to storage...
+	      Cluster: winfclus03
+	      Vserver: bryan-svm-84-128
+
+	INFO  (CeCreateSnapshot.pl): Initial connection to filer using ONTAPI version 1.20
+	INFO  (CeCreateSnapshot.pl): Storage Controller <winfclus03> is running ONTAP version:
+	      NetApp Release 8.3.2: Wed Feb 24 03:29:11 UTC 2016
+
+	INFO  (CeCreateSnapshot.pl): Storage Controller <winfclus03> is running cDOT.
+
+	INFO  (CeCreateSnapshot.pl): ONTAP API version (system-get-ontapi-version) 1.32
+
+	INFO  (CeCreateSnapshot.pl): Reconnecting to filer using ONTAP API version 1.32
+
+
+
 
     Resolve Errors
     If the test option returns an error, most likely it is due to misconfigured options in the 

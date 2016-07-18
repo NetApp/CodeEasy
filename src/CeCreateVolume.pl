@@ -75,7 +75,10 @@ our $verbose;                      # cmdline arg: verbosity level
 our $naserver = &CeCommon::init_filer();
 
 # test connection to filer only...
-exit 0    if (defined $test_only);
+if (defined $test_only) {
+   print "\nINFO  ($main::progname): Test ONTAP API access connectivity only...exiting.\n\n";
+   exit 0;
+}
 
 
 #--------------------------------------- 

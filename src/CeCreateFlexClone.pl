@@ -81,7 +81,10 @@ use CeCommon;      # contains CodeEasy common Perl functions; like &init_filer()
 our $naserver = &CeCommon::init_filer();
 
 # test connection to filer only...
-exit 0    if (defined $test_only);
+if (defined $test_only) {
+   print "\nINFO  ($main::progname): Test ONTAP API access connectivity only...exiting.\n\n";
+   exit 0;
+}
 
 #--------------------------------------- 
 # list available snapshots - then exit
@@ -162,6 +165,7 @@ sub parse_cmd_line {
     #---------------------------------------- 
     # check for correct inputs
     #---------------------------------------- 
+    return if (defined $test_only);
 
     # check if volume name was passed on the command line
     if (defined $volume ) {

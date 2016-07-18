@@ -44,8 +44,7 @@ use warnings;
 #---------------------------------------- 
 # SDK setenv not set, assume the SDK is in parallel to the CodeEasy
 # tarball installation    ***** CUSTOMIZE ME *****
-#use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
-use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.3.1/lib/perl/NetApp";
+use lib "/home/jmichae1/netapp-manageability-sdk-5.4P1/lib/perl/NetApp";
 # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
 
 # load the NetApp Manageability SDK components
@@ -83,9 +82,11 @@ sub init_filer {
     #           5.3.1 NMSDK use NaServer($host,1,7)
     # sets the name of the Storage cluster to which a Cluster API need to 
     # be tunneled from a Cluster Management Interface.
-    my $naserver = NaServer->new($CeInit::CE_CLUSTER, 1, 7);
+    print "INFO  ($main::progname): Initial connection to filer using ONTAPI version $CeInit::CE_ONTAPI_MAJOR_VERSION\.$CeInit::CE_ONTAPI_MINOR_VERSION\n";
+    my $naserver = NaServer->new($CeInit::CE_CLUSTER, $CeInit::CE_ONTAPI_MAJOR_VERSION, $CeInit::CE_ONTAPI_MINOR_VERSION);
 
     # set vserver to access
+    # this is the vserve name - NOT a DNS/IP Address of a LIF.  Its the textual name of the VServer.
     $naserver->set_vserver("$CeInit::CE_VSERVER");
 
     # set API transport type - HTTP is the default
@@ -104,13 +105,14 @@ sub init_filer {
     #--------------------------------------- 
     # check connection to the filer by requesting a simple ontapi version status
     #--------------------------------------- 
-    $out =  $naserver->invoke("system-get-version");
+    my $api_call =  "system-get-version";
+    $out =  $naserver->invoke($api_call);
 
     # check error status and exit if basic communication with the filer can't be estabilished.
     $errno = $out->results_errno();
     if ($errno) {
         print "ERROR ($main::progname): FAIL: Unable to connect to cluster/vserver: $CeInit::CE_CLUSTER/$CeInit::CE_VSERVER \n";
-        print "ERROR ($main::progname): system-get-version returned with $errno and reason: " . 
+        print "ERROR ($main::progname): $api_call returned with $errno and reason: " . 
 	                          '"' .  $out->results_reason() . "\n";
         print "ERROR ($main::progname): Exiting with error.\n";
         exit 1;
@@ -121,7 +123,7 @@ sub init_filer {
     # Example:       NetApp Release 8.2.1RC2X6 Cluster-Mode: Wed Dec 18 19:14:04 PST 2013 
     #--------------------------------------- 
     $main::cdot_version = $out->child_get_string("version");
-    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running ONTAP API version:\n" . 
+    print "INFO  ($main::progname): Storage Controller <$CeInit::CE_CLUSTER> is running ONTAP version:\n" . 
           "      $main::cdot_version\n\n";
 
     # check that filer is running cDOT and not 7-mode
@@ -133,6 +135,69 @@ sub init_filer {
 	        "Exiting...\n";
 	exit 1;
     }
+
+    #--------------------------------------- 
+    # check connection to the filer by requesting a simple ontapi version status
+    #--------------------------------------- 
+    $api_call = "system-get-ontapi-version";
+    $out =  $naserver->invoke("$api_call");
+
+    # check error status and exit if basic communication with the filer can't be estabilished.
+    $errno = $out->results_errno();
+    if ($errno) {
+        print "ERROR ($main::progname): FAIL: Unable to connect to cluster/vserver: $CeInit::CE_CLUSTER/$CeInit::CE_VSERVER \n";
+        print "ERROR ($main::progname): $api_call returned with $errno and reason: " . 
+	                          '"' .  $out->results_reason() . "\n";
+        print "ERROR ($main::progname): Exiting with error.\n";
+        exit 1;
+    }
+
+    $main::ontapi_major_version = $out->child_get_string("major-version");
+    $main::ontapi_minor_version = $out->child_get_string("minor-version");
+    print "INFO  ($main::progname): ONTAP API version ($api_call) $main::ontapi_major_version\.$main::ontapi_minor_version\n\n";
+    print "INFO  ($main::progname): Reconnecting to filer using ONTAP API version $main::ontapi_major_version\.$main::ontapi_minor_version\n";
+
+
+    # ---------------------------------------- 
+    # call naserver again now with known API major/minor version 
+    # which is known compatible with ONTAP version
+    # ---------------------------------------- 
+    $naserver = NaServer->new($CeInit::CE_CLUSTER, $main::ontapi_major_version, $main::ontapi_minor_version);
+    
+    # set vserver to access
+    # this is the vserve name - NOT a DNS/IP Address of a LIF.  Its the textual name of the VServer.
+    $naserver->set_vserver("$CeInit::CE_VSERVER");
+
+    # set API transport type - HTTP is the default
+    $naserver->set_transport_type($CeInit::CE_TRANSPORT_TYPE) if (defined $CeInit::CE_TRANSPORT_TYPE);
+
+    # pass username/password for vserver ontapi application access
+    #     $naserver->set_admin_user("vsadmin", "devops123");
+    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER)         if (defined @CeInit::CE_ADMIN_USER);
+
+    # set communication style - typically just 'LOGIN'
+    $naserver->set_style($CeInit::CE_STYLE)                   if (defined $CeInit::CE_STYLE);
+
+    # set communication port
+    $naserver->set_port($CeInit::CE_PORT)                     if (defined $CeInit::CE_PORT);
+
+    #--------------------------------------- 
+    # check connection to the filer by requesting a simple ontapi version status
+    #--------------------------------------- 
+    $api_call =  "system-get-version";
+    $out =  $naserver->invoke($api_call);
+
+    # check error status and exit if basic communication with the filer can't be estabilished.
+    $errno = $out->results_errno();
+    if ($errno) {
+        print "ERROR ($main::progname): FAIL: Unable to connect to cluster/vserver: $CeInit::CE_CLUSTER/$CeInit::CE_VSERVER \n";
+        print "ERROR ($main::progname): $api_call returned with $errno and reason: " . 
+	                          '"' .  $out->results_reason() . "\n";
+        print "ERROR ($main::progname): Exiting with error.\n";
+        exit 1;
+    }
+
+
 
     # return to calling program
     return $naserver;
@@ -158,7 +223,9 @@ sub list_snapshots {
     my %snapshot_list = &CeCommon::getSnapshotList($naserver, $volume);
 
     print "\nINFO  ($main::progname): Snapshot list for volume '$volume'\n" .
-            "      (NOTE: hourly, daily and weekly snapshots not listed)\n";
+            "      (NOTE: hourly, daily and weekly snapshots not listed)\n\n";
+    printf("      %-40s     Snapshot Name\n", "Volume Name");
+    printf("      %-40s     --------------------\n", "--------------------");
 
     # loop thru list of snapshot directories 
     foreach my $snap (sort keys %snapshot_list) {
@@ -171,7 +238,7 @@ sub list_snapshots {
 	}
 
 	# remaining snapshot
-	print "\t$snap\n";
+        printf("      %-40s     $snap\n", $volume);
 
 	# keep track of snapshot count
 	$snap_cnt++;

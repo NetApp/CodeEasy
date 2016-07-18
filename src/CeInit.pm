@@ -32,17 +32,28 @@ package CeInit;
     #   vserver modify -vserver <vserver> -aggr-list <aggrname>
      
 
-    our $CE_CLUSTER         = "winfclus03";         # name of the cluster port
+    our $CE_CLUSTER         = "winfclus03";         # name of the cluster management port (this is a IP/DNS address)
+                                                    
     our @CE_ADMIN_USER      = ("demo","Netapp123"); # cluster login (username,password)
-    # SDK API Example:  $naserver->set_admin_user("cluster_admin", "netapp123");
+                                                    # SDK API Example:  $naserver->set_admin_user("demo", "Netapp123");
 
-    our $CE_VSERVER         = "bryan-svm-84-128";   # name of the vserver port
+    our $CE_VSERVER         = "bryan-svm-84-128";   # VServer name (NOTE: this is not a LIF IP/DNS name)
+                                                    # This is the name you get from %cluster_if> vserver show       -> first column lists VServer names
+                                                    # The vserver name will be used to enable tunneling from the cluster to the vserver
 
     our $CE_STYLE           = "LOGIN";              # Sets the authentication mechanism to be used for communicating with the given server.
                                                     # default is 'LOGIN'
     our $CE_TRANSPORT_TYPE  = "HTTP";               # The default transport type is HTTP. For secure transport, use HTTPS as the transport type.
     our $CE_PORT            = "80";                 # Sets the port on which the API commands need to be invoked for the given server context
                                                     # HTTP -> use port 80, HTTPS -> use port 443
+                                                   
+                                                    
+    our $CE_ONTAPI_MAJOR_VERSION = 1;               # The ONTAP API Major/Minor version defaults.  
+    our $CE_ONTAPI_MINOR_VERSION = 20;              # the script will read these values from the filer and then set the correct values.
+                                                    # these are just initial values since some values must be provided.
+                                                    # You can use the jexplore utility found the <NMSDK>/zedi/ directory.
+                                                    # %> java -jar jexplore.jar
+                                                    # Then read the system-get-ontapi-version value to see the correct value
 
     # default volume name - is the default used by CeCreateSnapshot and CeCreateFlexClone
     our $CE_DEFAULT_VOLUME_NAME    = "project_A_jenkin_build";
@@ -131,7 +142,7 @@ package CeInit;
 
 
     # REQUIRED options for volume-create (as found in CeCreateVolume.pl)
-    our @CE_VOLUME_CREATE_REQUIRED = ("containing-aggr-name", 'aggr1_clus03_03_400SSD'
+    our @CE_VOLUME_CREATE_REQUIRED = ("containing-aggr-name", 'aggr1_winfclus03_02_600SAS'
                                      );
 
     # OPTIONAL options for volume-create (as found in CeCreateVolume.pl)
@@ -153,6 +164,8 @@ package CeInit;
 ########################################
 our @EXPORT = qw(@CE_ADMIN_USER$
                  $CE_CLUSTER $CE_VSERVER 
+                 $CE_ONTAPI_MAJOR_VERSION
+                 $CE_ONTAPI_MINOR_VERSION
 		 $CE_STYLE
                  $CE_TRANSPORT_TYPE $CE_PORT
                  $CE_DEVOPS_USER
