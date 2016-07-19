@@ -341,8 +341,8 @@ sub clone_create {
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
+          "      space-reserve         = none\n\n";
                   
-
     #--------------------------------------- 
     # check that the volume already exists - if not error
     #--------------------------------------- 
@@ -409,7 +409,6 @@ sub clone_create {
 	# user friendly error message
 	print "ERROR ($progname): Unable to create FlexClone '$flexclone_vol_name'\n"; 
 	# verbose debug
-        print "ERROR ($progname): Unable to volume-clone-create snapshot $parent_snapshot \n";
         print "ERROR ($progname): volume-clone-create returned with $errno reason: " . 
 	                          '"' . $out->results_reason() . "\n" if ($verbose);
         print "ERROR ($progname): Exiting with error.\n\n";
