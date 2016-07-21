@@ -308,6 +308,7 @@ sub clone_create {
     # temp vars for getting filer info and status
     my $out;
     my $errno;
+    my $cmd;
 
 
     #--------------------------------------- 
@@ -323,6 +324,18 @@ sub clone_create {
     # UNIX_clone_path - if done correctly, the FlexClone will be automounted
     # automatically by the filer.
     my $UNIX_clone_path     = "$UNIX_mount_path/$clone_name";
+
+    # test if UNIX mount point exits - if not create it
+    if (! -d $UNIX_mount_path) {
+	print "INFO: ($progname): UNIX Mount point does not exist!\n" .
+              "      Creating $UNIX_mount_path\n";
+        $cmd = "/bin/mkdir -p $UNIX_mount_path";
+        system($cmd);
+    } else {
+	print "INFO: ($progname: UNIX Mount point exists.\n" .
+              "      $UNIX_mount_path\n";
+
+    }
 
 
     #--------------------------------------- 
