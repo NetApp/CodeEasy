@@ -410,7 +410,7 @@ sub clone_create {
 	print "ERROR ($progname): Unable to create FlexClone '$flexclone_vol_name'\n"; 
 	# verbose debug
         print "ERROR ($progname): volume-clone-create returned with $errno reason: " . 
-	                          '"' . $out->results_reason() . "\n" if ($verbose);
+	                          '"' . $out->results_reason() . "\n";
         print "ERROR ($progname): Exiting with error.\n\n";
 
         exit 1;
