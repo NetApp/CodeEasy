@@ -354,12 +354,27 @@ sub clone_create {
     # CE_JUNCT_PATH_USERS vs the CE_JUNCT_PATH_MASTER
     my $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
 
+    # place the FlexClone owner in the comment field so it can be tracked.
+    # This can be any string of information.  One idea might be to 
+    # write single line XML like 
+    #      <clone_info><owner>jmichae1</owner><date_created>2016-07-21</date_created><project>project_A</project></clone_info>
+    #
+    #      Displayed in multiple lines for readability
+    #      <clone_info>
+    #          <owner>jmichae1</owner>
+    #          <date_created>2016-07-21</date_created>
+    #          <project>project_A</project>
+    #      </clone_info>
+    my $comment_field = $username;
+
+
     print "INFO  ($progname): Creating FlexClone volume\n" .
           "      flexclone volume name = $flexclone_vol_name\n" .
           "      parent-volume         = $volume\n" .
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
+          "      Comment (clown owner) = $comment_field\n" .
           "      space-reserve         = none\n\n";
                   
     #--------------------------------------- 
@@ -420,6 +435,7 @@ sub clone_create {
                                                     "volume",          $flexclone_vol_name,
 						    "junction-path",   $junction_path, 
 						    "space-reserve",   'none',
+						    "comment",         $comment_field,
 						    );
 
     # check status of the invoked command
@@ -643,7 +659,7 @@ sub list_flexclones {
     printf  "%15s",               "FlexClone Vol";
     printf  "%15s",               "Split Est";
     printf  "%24s",               "FlexClone Act";
-    printf  "%15s",               "Cloan Owner";
+    printf  "%15s",               "Clone Owner";
     printf  "  %s \n",            "Junction-path";
     print   "---------------------------------------------------------------------------------------" .
             "---------------------------------------------------------------------------------------------------\n"; 
