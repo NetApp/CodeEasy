@@ -327,10 +327,16 @@ sub clone_create {
 
     # test if UNIX mount point exits - if not create it
     if (! -d $UNIX_mount_path) {
-	print "INFO: ($progname): UNIX Mount point does not exist!\n" .
-              "      Creating $UNIX_mount_path\n";
+	print "INFO: ($progname): UNIX Mount point does not exist!\n";
         $cmd = "/bin/mkdir -p $UNIX_mount_path";
-        system($cmd);
+        if (system($cmd) == 0) {
+            print "INFO: ($progname): Successfully created $UNIX_mount_path\n";
+
+        } else {
+            print "ERROR: ($progname): Problem occured while trying to create $UNIX_mount_path\n" .
+                  "       $cmd\n" .
+                  "       Check to ensure write permissions on the directory tree.\n";
+        }
     } else {
 	print "INFO: ($progname: UNIX Mount point exists.\n" .
               "      $UNIX_mount_path\n";
