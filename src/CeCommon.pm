@@ -228,7 +228,7 @@ sub list_snapshots {
     printf("      %-40s     --------------------\n", "--------------------");
 
     # loop thru list of snapshot directories 
-    foreach my $snap (sort keys %snapshot_list) {
+    foreach my $snap (sort {$snapshot_list{$a} <=> $snapshot_list{$b}} keys %snapshot_list) {
 
 	# skip regular snapshot - so only specifically named snapshots are shown
 	if ( ($snap =~ /^hourly/) || ($snap =~ /^daily/) || ($snap =~ /^weekly/) ) {
@@ -238,7 +238,8 @@ sub list_snapshots {
 	}
 
 	# remaining snapshot
-        printf("      %-40s     $snap\n", $volume);
+	my $formatted_snap_time = localtime($snapshot_list{$snap});
+	print "\t$snap  $formatted_snap_time\n";
 
 	# keep track of snapshot count
 	$snap_cnt++;
@@ -248,6 +249,8 @@ sub list_snapshots {
     if ($snap_cnt == 0 ) {
 	print "\n      No snapshots found for volume '$volume'\n";
 	print   "      hourly/daily/weekly snapshots were found, but excluded\n\n" if ($snap_skip_cnt != 0);
+    } else {
+	print "\n      $snap_cnt snapshots found for volume '$volume'\n";
     }
 
     # exit program successfully
@@ -269,7 +272,7 @@ sub vGetcDOTList {
     my $done = 0;
     my $tag  = 0;
     my $zapi_results;
-    my $MAX_RECORDS = 200;
+    my $MAX_RECORDS = 255;
 
     # loop thru calling the command until all tags are processed
     while ( !$done ) {
@@ -339,6 +342,7 @@ sub getVolumeList {
     print "DEBUG: List of volumes on the vserver\n" if ($main::verbose);
     foreach my $tattr ( @vlist ) {
 	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
+	my $vol_space_attrs = $tattr->child_get( "volume-space-attributes" );
 
 	#print "DEBUG: volume-id-attributes\n";
 	#printf($tattr->sprintf());
@@ -347,8 +351,13 @@ sub getVolumeList {
 	if ( $vol_id_attrs ) {
 	    my $volume_name = $vol_id_attrs->child_get_string( "name" );
 
+            my $volume_size;
+            if ( $vol_space_attrs ) {
+                $volume_size = $vol_space_attrs->child_get_string( "size" );
+            }
+
 	    # store volume in list which is easy to access via hash
-	    $volume_list{$volume_name} = 1;
+	    $volume_list{$volume_name} = $volume_size;
 
 	    print "       $volume_name\n" if ($main::verbose);
 	}
@@ -413,6 +422,7 @@ sub getSnapshotList {
 	# name from the data structure.
 	my $snap_volume = $snap_data->child_get_string("volume");
 	my $snap_name   = $snap_data->child_get_string("name");
+	my $access_time = $snap_data->child_get_string("access-time");
 
 	# all volumes will be returned - only collect snapshots for the
 	# specified volume
@@ -420,7 +430,7 @@ sub getSnapshotList {
 	    print "DEBUG: snapshot: $snap_volume => $snap_name\n" if (0);
 
 	    # store volume in list which is easy to access via hash
-	    $snapshot_list{$snap_name} = 1;
+	    $snapshot_list{$snap_name} = $access_time;
 	}
     }
 
