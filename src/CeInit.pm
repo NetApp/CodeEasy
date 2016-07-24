@@ -84,6 +84,8 @@ package CeInit;
     # FlexClones will be created at 
     #    JP = $CE_JUNCT_PATH_USERS/<flexclone name>
 
+    # location on the filer where SnapMirror'ed volumes are stored
+    our $CE_JUNCT_PATH_SNAPS       = "/ce_projects/project_A/snap_builds";
 
 
 ########################################
@@ -171,7 +173,7 @@ our @EXPORT = qw(@CE_ADMIN_USER$
                  $CE_DEVOPS_USER
                  $CE_UNIX_ROOT_VOLUME_PATH $CE_JUNCT_PATH_ROOT
 		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH 
-                 $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS
+                 $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS $CE_JUNCT_PATH_SNAPS
 		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS
                  $CE_CMD_FIND $CE_CMD_XARGS 
                  );
