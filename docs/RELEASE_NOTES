@@ -1,6 +1,12 @@
 --------------------------------------------------------------------------------
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
+CodeEasy_1.1.5         (release date: 2016-07-24)
+----------------------------------------
+    - Merged in changed from Michael Arndt (michael.arndt@netapp.com.
+      This change included adding a new script called CeSnapMirror.pl for creating SnapMirror
+      copies of the volumes.  
+
 CodeEasy_1.1.4         (release date: 2016-07-18)
 ----------------------------------------
     - Updated CeInit and CeCommon functions to improve setting of ONTAP API versions.
