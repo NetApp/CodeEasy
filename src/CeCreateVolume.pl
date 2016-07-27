@@ -112,7 +112,8 @@ exit 0;
 sub parse_cmd_line {
 
   # parse command line 
-  GetOptions ("h|help"           => sub { &show_help() },   
+  my $results = GetOptions (
+              'h|help'           => sub { &show_help() },   
 
               'vol|volume=s'     => \$volume,        # volume to create
 	      'r|remove'         => \$remove_volume, # remove volume
@@ -123,6 +124,13 @@ sub parse_cmd_line {
 	      '<>'               => sub { &CMDParseError() },
 	      ); 
 
+    # check for invalid options passed to GetOptions
+    if ( $results != 1 ) {
+       print "\nERROR: Invalid option(s) passed on the command line.\n" .
+               "       For usage information type the following command;\n" .
+               "       %> $progname -help\n\n";
+       exit 1;
+    }
 
     # check if volume name was passed on the command line
     if ( defined $volume ) {

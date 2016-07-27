@@ -144,7 +144,8 @@ exit 0;
 sub parse_cmd_line {
 
   # parse command line 
-  GetOptions ("h|help"             => sub { &show_help() },   
+  my $results = GetOptions (
+              'h|help'             => sub { &show_help() },   
 
               'vol|volume=s'       => \$volume,                  # volume to create
 	      's|snapshot=s'       => \$snapshot_name,           # snapshot name
@@ -161,6 +162,14 @@ sub parse_cmd_line {
               'v|verbose'          => \$verbose,                 # increase output verbosity
 	      '<>'                 => sub { &CMDParseError() },
 	      ); 
+
+    # check for invalid options passed to GetOptions
+    if ( $results != 1 ) {
+       print "\nERROR: Invalid option(s) passed on the command line.\n" .
+               "       For usage information type the following command;\n" .
+               "       %> $progname -help\n\n";
+       exit 1;
+    }
 
     #---------------------------------------- 
     # check for correct inputs
@@ -375,6 +384,7 @@ sub clone_create {
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
           "      Comment (clown owner) = $comment_field\n" .
+          "      snapshot-policy       =  none\n" .
           "      space-reserve         = none\n\n";
                   
     #--------------------------------------- 
@@ -435,6 +445,7 @@ sub clone_create {
                                                     "volume",          $flexclone_vol_name,
 						    "junction-path",   $junction_path, 
 						    "space-reserve",   'none',
+                                                    "snapshot-policy", 'none', 
 						    "comment",         $comment_field,
 						    );
 

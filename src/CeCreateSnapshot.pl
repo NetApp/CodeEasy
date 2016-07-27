@@ -120,7 +120,8 @@ exit 0;
 sub parse_cmd_line {
 
   # parse command line 
-  GetOptions ('h|help'           => sub { &show_help() },   
+  my $results = GetOptions (
+              'h|help'           => sub { &show_help() },   
 
               'vol|volume=s'     => \$volume,            # volume to snapshot
 	      's|snapshot=s'     => \$snapshot_name,     # snapshot name
@@ -134,6 +135,15 @@ sub parse_cmd_line {
               'v|verbose'        => \$verbose,           # increase output verbosity
 	      '<>'               => sub { &CMDParseError() },
 	      ); 
+
+    # check for invalid options passed to GetOptions
+    if ( $results != 1 ) {
+       print "\nERROR: Invalid option(s) passed on the command line.\n" .
+               "       For usage information type the following command;\n" .
+               "       %> $progname -help\n\n";
+       exit 1;
+    }
+
 
 
     # check if volume name was passed on the command line
@@ -150,6 +160,20 @@ sub parse_cmd_line {
 	      "      Exiting...\n";
 	exit 1;
     }
+    #
+    # if test mode - return
+    return if (defined $test_only);
+    
+    # if list snapshots requested - jump out and list snapshots
+    return if (defined $list_snapshots);
+
+    # check if snapshot name was passed on the command line
+    if (! defined $snapshot_name ) {
+	# command line volume name 
+	print "ERROR ($progname): No snapshot name passed on the command line\n";
+        exit 1;
+    }
+
 
 } # end of sub parse_cmd_line()
 

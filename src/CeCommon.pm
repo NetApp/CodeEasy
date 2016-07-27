@@ -224,8 +224,8 @@ sub list_snapshots {
 
     print "\nINFO  ($main::progname): Snapshot list for volume '$volume'\n" .
             "      (NOTE: hourly, daily and weekly snapshots not listed)\n\n";
-    printf("      %-40s     Snapshot Name\n", "Volume Name");
-    printf("      %-40s     --------------------\n", "--------------------");
+    printf("      %-40s     %-40s Snapshot Date\n", "Volume Name", "Snapshot Name");
+    printf("      %-40s     %-40s --------------------\n", "--------------------", "--------------------");
 
     # loop thru list of snapshot directories 
     foreach my $snap (sort {$snapshot_list{$a} <=> $snapshot_list{$b}} keys %snapshot_list) {
@@ -239,7 +239,8 @@ sub list_snapshots {
 
 	# remaining snapshot
 	my $formatted_snap_time = localtime($snapshot_list{$snap});
-	print "\t$snap  $formatted_snap_time\n";
+	#print "\t$volume $snap  $formatted_snap_time\n";
+	printf("      %-40s     %-40s $formatted_snap_time\n", $volume, $snap );
 
 	# keep track of snapshot count
 	$snap_cnt++;
