@@ -384,7 +384,6 @@ sub clone_create {
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
           "      Comment (clown owner) = $comment_field\n" .
-          "      snapshot-policy       =  none\n" .
           "      space-reserve         = none\n\n";
                   
     #--------------------------------------- 
@@ -445,7 +444,6 @@ sub clone_create {
                                                     "volume",          $flexclone_vol_name,
 						    "junction-path",   $junction_path, 
 						    "space-reserve",   'none',
-                                                    "snapshot-policy", 'none', 
 						    "comment",         $comment_field,
 						    );
 
@@ -606,7 +604,7 @@ sub list_flexclones {
     my %comment_field_map;
     my %vol_usage_map;
     my %vol_dedup_saved;
-    my %vol_dedup_shared;
+    my %vol_dedup_percent;
 
     #---------------------------------------- 
     # get list of all volumes 
@@ -618,45 +616,50 @@ sub list_flexclones {
     #---------------------------------------- 
     foreach my $tattr ( @vlist ) {
 	my $vol_id_attrs = $tattr->child_get( "volume-id-attributes" );
-	#print "DEBUG: volume-id-attributes\n";
-	#printf($tattr->sprintf());
 
-	my $volume_name;
-	if ( $vol_id_attrs ) {
-	    $volume_name = $vol_id_attrs->child_get_string( "name" );
+        # get the volume name
+        my $volume_name;
+        $volume_name = $vol_id_attrs->child_get_string( "name" );
 
-	    # get the junction path info for the volume - store it in a lookup for later
-	    my $jpath = $vol_id_attrs->child_get_string( "junction-path" );
-	    $junction_path_map{$volume_name} = $jpath;
-	    print "DEBUG: Volume: $volume_name \tJunction Path: $jpath \n" if ($verbose);
+        # get the junction path info for the volume - store it in a lookup for later
+        my $jpath = $vol_id_attrs->child_get_string( "junction-path" );
+        $junction_path_map{$volume_name} = $jpath;
+        print "DEBUG: Volume: $volume_name \tJunction Path: $jpath \n" if ($verbose);
 
-	    # get the comment field from the volume - store it in a lookup for later
-	    my $comment_field = $vol_id_attrs->child_get_string( "comment" );
-	    if (defined $comment_field) {
-		$comment_field_map{$volume_name} = $comment_field;
-	    } else {
-		$comment_field_map{$volume_name} = "USER_UNKNOWN";
-	    }
-	    print "DEBUG: Volume: $volume_name \tComment Field: $comment_field_map{$volume_name}\n" if ($verbose);
-	}
-	my $vol_space_attrs = $tattr->child_get( "volume-space-attributes" );
-	if ( $vol_space_attrs ) {
-	    my $vol_usage = $vol_space_attrs->child_get_string( "size-used" );
-	    if (defined $vol_usage) {
-		$vol_usage_map{$volume_name} = $vol_usage;
-		#print "DEBUG: vol usage: $volume_name $vol_usage_map{$volume_name}\n";
-	    }
-	}
-	my $vol_sis_attrs = $tattr->child_get( "volume-sis-attributes" );
-	#printf($vol_sis_attrs->sprintf());
-	if ( $vol_sis_attrs ) {
-	    my $dedup_saved  = $vol_sis_attrs->child_get_string( "percentage-total-space-saved" );
-	    my $dedup_shared = $vol_sis_attrs->child_get_string( "deduplication-space-shared" );
-	    if (defined $dedup_saved) {
-		$vol_dedup_saved{$volume_name}  = $dedup_saved;
-		$vol_dedup_shared{$volume_name} = $dedup_shared;
-	    }
-	}
+        # get the comment field from the volume - store it in a lookup for later
+        my $comment_field = $vol_id_attrs->child_get_string( "comment" );
+        if (defined $comment_field) {
+                $comment_field_map{$volume_name} = $comment_field;
+        } else {
+                $comment_field_map{$volume_name} = "USER_UNKNOWN";
+        }
+        print "DEBUG: Volume: $volume_name \tComment Field: $comment_field_map{$volume_name}\n" if ($verbose);
+
+        # get the volume size - store it in a lookup for later
+        my $vol_space_attrs = $tattr->child_get( "volume-space-attributes" );
+        if ( $vol_space_attrs ) {
+            my $vol_usage = $vol_space_attrs->child_get_string( "size-used" );
+            if (defined $vol_usage) {
+                $vol_usage_map{$volume_name} = $vol_usage;
+            }
+        }
+
+        # get volume storage efficiency data - store it in a lookup for later
+        my $vol_sis_attrs = $tattr->child_get( "volume-sis-attributes" );
+        if ( $vol_sis_attrs ) {
+            my $saved_percent = $vol_sis_attrs->child_get_string( "percentage-total-space-saved" );
+            my $saved_bytes   = $vol_sis_attrs->child_get_string( "total-space-saved" );
+            if (defined $saved_bytes) {
+                $vol_dedup_percent{$volume_name} = $saved_percent;
+                $vol_dedup_saved{$volume_name}   = $saved_bytes;
+            } else {
+                $vol_dedup_percent{$volume_name} = 0;
+                $vol_dedup_saved{$volume_name}   = 0;
+            }
+        } else {
+            $vol_dedup_percent{$volume_name} = 0;
+            $vol_dedup_saved{$volume_name}   = 0;
+        }
     }
 
 
@@ -669,9 +672,17 @@ sub list_flexclones {
     printf  "%15s",               "Parent Vol";
     printf  "%15s",               "FlexClone Vol";
     printf  "%15s",               "Split Est";
-    printf  "%24s",               "FlexClone Act";
+    printf  "%24s",               "FlexClone Actual";
     printf  "%15s",               "Clone Owner";
     printf  "  %s \n",            "Junction-path";
+    printf  "%-25s %-30s %-29s ", "", "", "";
+    printf  "%15s",               "(Phys Used)";
+    printf  "%15s",               "(Phys Used)";
+    printf  "%15s",               "(Logical Used)";
+    printf  "%24s",               "(Phys Estimate)";
+    printf  "%15s",               "";
+    printf  "  %s \n",            "";
+
     print   "---------------------------------------------------------------------------------------" .
             "---------------------------------------------------------------------------------------------------\n"; 
 
@@ -682,8 +693,8 @@ sub list_flexclones {
 
     # for each clone entry
     foreach my $vol_data ( @vlist ) {
-    #printf($vol_data->sprintf());
 	    my $volume_name    = $vol_data->child_get_string( "parent-volume"  );
+            next if (($volume ne $CeInit::CE_DEFAULT_VOLUME_NAME) && ($volume_name ne $volume));
 	    my $clone_name     = $vol_data->child_get_string( "volume"         );
 	    my $snapshot       = $vol_data->child_get_string( "parent-snapshot");
 	    my $flexclone_used = $vol_data->child_get_string( "used"           );
@@ -691,27 +702,26 @@ sub list_flexclones {
 	    my $comment_field  = $comment_field_map{$clone_name};
 	       $comment_field  = "USER_UNKNOWN" if ($comment_field eq "");
 
-	    # parent volume: space used - represent data used in MB
-	    my $parent_used = $vol_usage_map{$volume_name}/1024/1024;
+	    # parent volume: space used - represent data used in GB
+	    my $parent_used = $vol_usage_map{$volume_name}/(1024*1024*1024);
 
 	    # split estimate value is returned in blocks rather than bytes
 	    $split_est      = $split_est*4096; # blocks => Bytes
 
 	    # storage used by the FlexClone
-	    my $flexclone_actual = $flexclone_used - $split_est;
+            my $flexclone_actual = (($flexclone_used + $vol_dedup_saved{$clone_name}) - $split_est) * ((100 - $vol_dedup_percent{$clone_name}) *.01);
 
 	    # calculate % savings
 	    my $savings      = ($flexclone_actual/$flexclone_used)*100;
-	    my $compression  = (1-$flexclone_actual/$flexclone_used)*100;
 
-	    # FlexClone volume: space used - represent data used in MB
-	    $flexclone_used    = $flexclone_used/1024/1024;
+	    # FlexClone volume: space used - represent data used in BB
+	    $flexclone_used    = $flexclone_used/(1024*1024*1024);
 
-	    # FlexClone calculated actual: space used - represent data used in MB
-	    $flexclone_actual    = $flexclone_actual/1024/1024;
+	    # FlexClone calculated actual: space used - represent data used in GB
+	    $flexclone_actual    = $flexclone_actual/(1024*1024*1024);
 
 	    # split estimate value is returned in blocks rather than bytes
-	    $split_est      = $split_est/1024/1024; # date in MiB
+	    $split_est      = $split_est/(1024*1024*1024); # date in GB
 
 	    # determine juction-path info
 	    my $jpath       = $vol_data->child_get_string( "junction-path"  );
@@ -728,12 +738,11 @@ sub list_flexclones {
 
 	    # print results
 	    printf "%-25s %-30s %-30s ", $volume_name, $snapshot, $clone_name;
-	    printf "%11.2f MB ",         $parent_used;
-	    printf "%11.2f MB ",         $flexclone_used;
-	    printf "%11.2f MB ",         $split_est;
-	    printf "%11.2f MB",          $flexclone_actual;
+	    printf "%11.2f GB ",         $parent_used;
+	    printf "%11.2f GB ",         $flexclone_used;
+	    printf "%11.2f GB ",         $split_est;
+	    printf "%11.2f GB",          $flexclone_actual;
 	    printf " (%5.2f",            $savings; print "%)";
-	    #printf " (%5.2f",           $compression; print "%)";
 	    printf "%15s",               $comment_field;
 	    printf "  %s\n",             $jpath;
     }
