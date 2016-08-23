@@ -71,7 +71,10 @@ package CeInit;
     #      sudo mount -t nfs devops_vserver:/ce_projects /
 
     # location of root of the juction_path
-    our $CE_JUNCT_PATH_ROOT        = "/ce_projects/";
+    our $CE_JUNCT_PATH_ROOT        = "/ce_projects";
+
+    # location on the filer where new build volumes are stored
+    our $CE_JUNCT_PATH_BUILDS      = "$CE_JUNCT_PATH_ROOT/project_A";
 						    
     # location on the filer where MASTER volume and snapshots are stored
     our $CE_JUNCT_PATH_MASTER      = "$CE_JUNCT_PATH_ROOT/project_A/jenkins_build";
@@ -80,12 +83,12 @@ package CeInit;
     #         /ce_projects/project_A/jenkin_build     , where jenkin_build is a volume 
 
     # location on the filer where USERS FlexClone volumes are stored
-    our $CE_JUNCT_PATH_USERS       = "/ce_projects/project_A/users";
+    our $CE_JUNCT_PATH_USERS       = "$CE_JUNCT_PATH_ROOT/project_A/users";
     # FlexClones will be created at 
     #    JP = $CE_JUNCT_PATH_USERS/<flexclone name>
 
     # location on the filer where SnapMirror'ed volumes are stored
-    our $CE_JUNCT_PATH_SNAPS       = "/ce_projects/project_A/snap_builds";
+    our $CE_JUNCT_PATH_SNAPS       = "$CE_JUNCT_PATH_ROOT/project_A/snap_builds";
 
 
 ########################################
@@ -94,17 +97,19 @@ package CeInit;
 
     # UNIX path where junction_path root volume is mounted 
     our $CE_UNIX_ROOT_VOLUME_PATH  = "/ce_projects";
-    
+
+    # UNIX path where junction_path build volumes are mounted
+    our $CE_UNIX_BUILDS_VOLUME_PATH  = "$CE_UNIX_ROOT_VOLUME_PATH/project_A";
 
     # UNIX path where master volume is mounted 
     #      this is volume which will be snapshot and flexcloned.
-    our $CE_UNIX_MASTER_VOLUME_PATH  = "$CE_UNIX_ROOT_VOLUME_PATH/project_A/jenkin_build";
+    our $CE_UNIX_MASTER_VOLUME_PATH  = "$CE_UNIX_BUILDS_VOLUME_PATH/jenkin_build";
 
     # USER FlexClones will be stored at 
     #    /x/eng/<site>/users/<username>/<flexclone> 
     #    the CeCreateFlexClone.pl will automatically add the <username> to the
     #    path - the filer junction path will automatically mount this location
-    our $CE_UNIX_USER_FLEXCLONE_PATH = "/ce_projects/project_A/users";
+    our $CE_UNIX_USER_FLEXCLONE_PATH = "$CE_UNIX_ROOT_VOLUME_PATH/project_A/users";
 
 
     #---------------------------------------- 
@@ -149,15 +154,24 @@ package CeInit;
 
     # OPTIONAL options for volume-create (as found in CeCreateVolume.pl)
     #          add or remove option pairs as needed.  
-    our @CE_VOLUME_CREATE_OPTIONS  = ("size",                  '3000g',
-                                      "unix-permissions",      '777',
-                                      "export-policy",         'codeeasy_exports',
-                                      "snapshot-policy",       'default',
-                                      "user-id",               $user_id, 
-                                      "group-id",              $group_id,
-                                      "space-reserve",         'none',
-				      "volume-security-style", 'unix'
+    our @CE_VOLUME_CREATE_OPTIONS  = ("size",                       '3000g',
+                                      "unix-permissions",            '777',
+                                      "export-policy",               'codeeasy_exports',
+                                      "snapshot-policy",             'default',
+                                      "percentage-snapshot-reserve", '5',
+                                      "user-id",                     $user_id, 
+                                      "group-id",                    $group_id,
+                                      "space-reserve",               'none',
+				      "volume-security-style",       'unix'
 				      );
+
+    # OPTIONAL method to bypass validation check when creating or deleting volumes
+    # Set this to 0 to skip validation checks
+    our $CE_VOLUME_CREATE_REMOVE_VALIDATE = 1;
+
+    # OPTIONAL maxfiles options for volume-create (as found in CeCreateVolume.pl)
+    # Set to a non-zero value for this to be used
+    our $CE_VOLUME_CREATE_MAXFILES = 0;
                                                      
 
 
@@ -172,9 +186,9 @@ our @EXPORT = qw(@CE_ADMIN_USER$
                  $CE_TRANSPORT_TYPE $CE_PORT
                  $CE_DEVOPS_USER
                  $CE_UNIX_ROOT_VOLUME_PATH $CE_JUNCT_PATH_ROOT
-		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH 
-                 $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS $CE_JUNCT_PATH_SNAPS
-		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS
+		 $CE_UNIX_USER_FLEXCLONE_PATH $CE_UNIX_MASTER_VOLUME_PATH $CE_UNIX_BUILDS_VOLUME_PATH
+                 $CE_DEFAULT_VOLUME_NAME  $CE_JUNCT_PATH_ROOT $CE_JUNCT_PATH_MASTER $CE_JUNCT_PATH_USERS $CE_JUNCT_PATH_SNAPS $CE_JUNCT_PATH_BUILDS
+		 @CE_VOLUME_CREATE_REQUIRED @CE_VOLUME_CREATE_OPTIONS $CE_VOLUME_CREATE_MAXFILES $CE_VOLUME_CREATE_REMOVE_VALIDATE
                  $CE_CMD_FIND $CE_CMD_XARGS 
                  );
 
