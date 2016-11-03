@@ -1,0 +1,108 @@
+########################################
+# Create certificate on a linux client #
+########################################
+NOTE: The openssl command below will prompt you for information about the
+      certificate.  You must enter the same username (<USER>) given in the 
+      "security login create" command in the storage system instructions below
+      for the "Common Name" value when creating the certificate.  For example
+      this would be "admin" in our example here, but it could be another user
+      associated with a less privileged role.
+$ openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout yourKeyFileName.key -out yourCertName.pem
+$ cat yourCertName.pem
+$ cat yourKeyFileName.key
+
+
+################################
+# Configure the storage system #
+################################
+::> security certificate install -type client-ca -vserver <vserver>
+ -> Cut and paste cert including BEGIN and END statements from yourCertName.pem
+::> security ssl modify -vserver <vserver> -client-enabled true
+::> security login create -user-or-group-name <USER> -application ontapi -authmethod cert -role <ROLE>
+::> security certificate show -type client-ca
+::> security ssl show -vserver <vserver>
+
+
+############
+# Examples #
+############
+[miarndt@svl-storage-dfm ~]$ openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout devops_cert.key -out devops_cert.pem
+Generating a 1024 bit RSA private key
+...................++++++
+.......................++++++
+writing new private key to 'devops_cert.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [GB]:US
+State or Province Name (full name) [Berkshire]:California
+Locality Name (eg, city) [Newbury]:SJC
+Organization Name (eg, company) [My Company Ltd]:Cisco
+Organizational Unit Name (eg, section) []:ENG
+Common Name (eg, your name or your server's hostname) []:devops_cert
+Email Address []:
+[miarndt@svl-storage-dfm ~]$ 
+
+[miarndt@svl-storage-dfm ~]$ cat devops_cert.pem
+-----BEGIN CERTIFICATE-----
+MIIDEDCCAnmgAwIBAgIJAPQn7lBhP40aMA0GCSqGSIb3DQEBBQUAMGQxCzAJBgNV
+BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMQwwCgYDVQQHEwNTSkMxDjAMBgNV
+BAoTBUNpc2NvMQwwCgYDVQQLEwNFTkcxFDASBgNVBAMMC2Rldm9wc19jZXJ0MB4X
+DTE2MTAwNzE2MjE0OFoXDTE3MTAwNzE2MjE0OFowZDELMAkGA1UEBhMCVVMxEzAR
+BgNVBAgTCkNhbGlmb3JuaWExDDAKBgNVBAcTA1NKQzEOMAwGA1UEChMFQ2lzY28x
+DDAKBgNVBAsTA0VORzEUMBIGA1UEAwwLZGV2b3BzX2NlcnQwgZ8wDQYJKoZIhvcN
+AQEBBQADgY0AMIGJAoGBAOVg/cO9C8WRIHOptl3UN9sVtjabi+Lk//PbqBq93jfZ
+wSSVU6abuoWEnM+IqbJZiWHjAv8HtfEBCA+4YzbDVFTlom5ZON9pr9bEaboerkmd
+Uhafki2umgHMw7IKHR0bpYFkWx9KfYS3S+pLjr2JquXjq61ufQlsdgn5oQs4WDdj
+AgMBAAGjgckwgcYwHQYDVR0OBBYEFBMdGf7WAOJdOWTEPGB6Q0y1lp0MMIGWBgNV
+HSMEgY4wgYuAFBMdGf7WAOJdOWTEPGB6Q0y1lp0MoWikZjBkMQswCQYDVQQGEwJV
+UzETMBEGA1UECBMKQ2FsaWZvcm5pYTEMMAoGA1UEBxMDU0pDMQ4wDAYDVQQKEwVD
+aXNjbzEMMAoGA1UECxMDRU5HMRQwEgYDVQQDDAtkZXZvcHNfY2VydIIJAPQn7lBh
+P40aMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQADgYEA32LC41yTGUSuApmZ
+GACbA0HBU5R6AUk6r5aaaQekj23bnEi28nazFSnnyH/f/CAPK8xRvqrVu1GqjMz2
+c/pha9tSWAAzVELVoU2SxDCSJUOXtfywDBSebMl+Wr4LhlLJydAne0x1RruqSpd0
+FOCI+KsCqaPKNZpVLgImkKIzUCM=
+-----END CERTIFICATE-----
+[miarndt@svl-storage-dfm ~]$
+
+
+svlngen4-c01-nas::> security login create -user-or-group-name devops_cert -application ontapi -authmethod cert -role devops -vserver svlngen4-c01-trad
+
+svlngen4-c01-nas::> 
+
+svlngen4-c01-nas::> security certificate install -type client-ca -vserver svlngen4-c01-trad
+
+Please enter Certificate: Press <Enter> when done
+-----BEGIN CERTIFICATE-----
+MIIDEDCCAnmgAwIBAgIJAPQn7lBhP40aMA0GCSqGSIb3DQEBBQUAMGQxCzAJBgNV
+BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMQwwCgYDVQQHEwNTSkMxDjAMBgNV
+BAoTBUNpc2NvMQwwCgYDVQQLEwNFTkcxFDASBgNVBAMMC2Rldm9wc19jZXJ0MB4X
+DTE2MTAwNzE2MjE0OFoXDTE3MTAwNzE2MjE0OFowZDELMAkGA1UEBhMCVVMxEzAR
+BgNVBAgTCkNhbGlmb3JuaWExDDAKBgNVBAcTA1NKQzEOMAwGA1UEChMFQ2lzY28x
+DDAKBgNVBAsTA0VORzEUMBIGA1UEAwwLZGV2b3BzX2NlcnQwgZ8wDQYJKoZIhvcN
+AQEBBQADgY0AMIGJAoGBAOVg/cO9C8WRIHOptl3UN9sVtjabi+Lk//PbqBq93jfZ
+wSSVU6abuoWEnM+IqbJZiWHjAv8HtfEBCA+4YzbDVFTlom5ZON9pr9bEaboerkmd
+Uhafki2umgHMw7IKHR0bpYFkWx9KfYS3S+pLjr2JquXjq61ufQlsdgn5oQs4WDdj
+AgMBAAGjgckwgcYwHQYDVR0OBBYEFBMdGf7WAOJdOWTEPGB6Q0y1lp0MMIGWBgNV
+HSMEgY4wgYuAFBMdGf7WAOJdOWTEPGB6Q0y1lp0MoWikZjBkMQswCQYDVQQGEwJV
+UzETMBEGA1UECBMKQ2FsaWZvcm5pYTEMMAoGA1UEBxMDU0pDMQ4wDAYDVQQKEwVD
+aXNjbzEMMAoGA1UECxMDRU5HMRQwEgYDVQQDDAtkZXZvcHNfY2VydIIJAPQn7lBh
+P40aMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQEFBQADgYEA32LC41yTGUSuApmZ
+GACbA0HBU5R6AUk6r5aaaQekj23bnEi28nazFSnnyH/f/CAPK8xRvqrVu1GqjMz2
+c/pha9tSWAAzVELVoU2SxDCSJUOXtfywDBSebMl+Wr4LhlLJydAne0x1RruqSpd0
+FOCI+KsCqaPKNZpVLgImkKIzUCM=
+-----END CERTIFICATE-----
+
+
+You should keep a copy of the CA-signed digital certificate for future reference.
+
+svlngen4-c01-nas::> 
+
+svlngen4-c01-nas::> security ssl modify -vserver svlngen4-c01-trad -client-enabled true
+
+svlngen4-c01-nas::> 
