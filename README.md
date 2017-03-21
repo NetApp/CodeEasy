@@ -3,6 +3,9 @@
 # Please refer to the complete docs/QUICKSTART document in the release
 ################################################################################
 
+**UPDATED**: For use with ONTAP 9.0 and later.  Still compatible with versions
+             to ONTAP 8.2 and later.
+
 ****************************************
    Introduction 
 ****************************************
@@ -39,7 +42,7 @@ A few examples:
 
 - A Silicon Valley network chip manufacturer was able to reduce their checkout and build time 
   from about 55 minutes to 5 minutes and at the save time save an average of 200GB 
-  per developer workspace. 
+  per developer workspace. With ONTAP 9.0 and later the clone time is reduced to <30 seconds.
  
 ****************************************
   Scope 
@@ -54,6 +57,9 @@ Support for this script is through the NetApp community forums. Questions and is
 In order to be able to utilize CodeEasy Toolkit the following is required:
 
 - cDot 8.2 or later (7-mode is not supported)
+  NOTE: ONTAP9.0 and later introduces an option to change user and group ownership of the clone.
+        This eliminates the need for a host based chown process.
+	
 - NetApp Manageability Software Development Kit (NMSDK) 5.3.x or later
 
 ****************************************
@@ -68,21 +74,21 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 	The SDK can be found on the mysupport.netapp.com 
 	Downloads -> Software -> NetApp Manageability SDK
 	Select "All Platforms" -> Go!
-	Select "NetApp Manageability SDK 5.4" -> View & Download
+	Select "NetApp Manageability SDK 5.6" -> View & Download
 
-	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.4.zip
+	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.6.zip
 
     STEP 2: Place the CodeEasy Toolkit and the SDK next to each other.
 	%> cd <workspace>
-	%> unzip netapp-manageability-sdk-5.4.zip
+	%> unzip netapp-manageability-sdk-5.6.zip
 
-    STEP 3: Download and untar the CodeEasy Toolkit
-	%> tar -zxvf CodeEasy_1.x.x.tgz
+    STEP 3: Get CodeEasy Toolkit from GitHub
+        %> git clone https://github.com/NetApp/CodeEasy.git
 
     The final directory structure should look something like.
     <workspace>/
-    	netapp-manageability-sdk-5.4/
-	CodeEasy_1.x.x/
+    	netapp-manageability-sdk-5.6/
+	CodeEasy/
 
     The CodeEasy Perl scripts assume the SDK is at the same level as the Toolkit.
     This can be change by editing the .pl script if a different location
@@ -90,6 +96,6 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 
     NOTE: If the SDK is installed in a different location, edit the path in
     the CeCommon.pm file to use the correct path.
-    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.4/lib/perl/NetApp";
-    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.4/lib/perl/NetApp";
+    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.6/lib/perl/NetApp";
+    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.6/lib/perl/NetApp";
     
