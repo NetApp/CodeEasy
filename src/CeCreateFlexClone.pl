@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl 
 ################################################################################
 # CodeEasy Customer Toolkit Script
 #          This script was developed by NetApp to help demonstrate NetApp 
@@ -53,12 +53,18 @@ our $snapshot_name;                # cmdline arg: snapshot to use for clone imag
 our $clone_name;                   # cmdline arg: flexclone name - as mounted (as seen by the UNIX user)
 our $flexclone_vol_name;           # cmdline arg: name of the flexclone volume name (as seen on the filer)
                                    #              (typically the same as flexclone name)
+our $junction_path;                # cmdline arg: junction_path - if passed via the cmd line. 
+our $username;
+our $groupname;
 our $list_snapshots;               # cmdline arg: list available snapshots
 our $list_flexclones;              # cmdline arg: list available flexclone volumes
 our $volume_delete;                # cmdline arg: remove flexclone volume
 our $test_only;                    # cmdline arg: test filer init then exit
 our $verbose;                      # cmdline arg: verbosity level
 
+our @CLONE_OPTIONS;
+our $uid;
+our $gid;
 
 # load CodeEasy packages
 use lib "$FindBin::Bin/.";
@@ -150,7 +156,11 @@ sub parse_cmd_line {
               'vol|volume=s'       => \$volume,                  # volume to create
 	      's|snapshot=s'       => \$snapshot_name,           # snapshot name
 	      'c|clone=s'          => \$clone_name,              # clone name
-	      'fc_volname=s'       => \$flexclone_vol_name,         # optional: junction_path name
+	      'fc_volname=s'       => \$flexclone_vol_name,      # optional: flexclone volume name
+              'jp|junction_path=s' => \$junction_path,           # optional: junction_path minus clone_name
+                                                                 #           jp = jp + clone_name
+              'user=s'             => \$username,          # optional: chown to new username          
+              'group=s'            => \$groupname,         # optional: chown to new groupname          
 
 	      'r|remove'           => \$volume_delete,           # remove clone volume
 
@@ -225,6 +235,7 @@ sub parse_cmd_line {
 	$flexclone_vol_name = $clone_name;
     }
 
+
 } # end of sub parse_cmd_line()
 
 
@@ -266,6 +277,13 @@ $progname: Usage Information
 				       the flexclone volume name.  But if there is a need for the flexclone
 				       volume name to be different than the volume name seen by UNIX, then use this
 				       option.
+       -jp|-junction_path <junction_path>
+                                     : OPTIONAL switch to allow passing a juction_path to the script.  This
+                                       is useful when setting up the flow.  NOTE: that the clone_name is appended
+                                       to the this option to great the full junction_path name.
+
+        -user  <username>            : OPTIONAL chown new clone to username
+        -group <groupname>           : OPTIONAL chown new clone to groupname
 
       -r|-remove                     : remove volume
 
@@ -319,13 +337,35 @@ sub clone_create {
     my $errno;
     my $cmd;
 
+    #--------------------------------------- 
+    # Check if user and group info was passed on the command line
+    # if not, then no uid/gid will be added to the create flexclone command
+    #--------------------------------------- 
+    # get uid and gid from actual UNIX user name and group names
+    if (( defined $username) and (defined $groupname)) {
+       # both user/group passed on the command line
+       $uid   = getpwnam($username);
+       $gid   = getgrnam($groupname);
+    
+       push @CLONE_OPTIONS, "uid", $uid;
+       push @CLONE_OPTIONS, "gid", $gid;
+
+     } elsif (((   defined $username) and (! defined $groupname)) or
+              (( ! defined $username) and (  defined $groupname)) ) {
+       # error both user and group must be specified
+       print "ERROR: username and group name must both be specified.\n" .
+             "       Exiting...\n";
+       exit 1; 
+
+     } else {
+       # Username and groupname were not specified on the command line
+       $username = getpwuid( $< ); chomp $username;
+     } 
 
     #--------------------------------------- 
     # get current users name and
     # make sure user has a directory at mount point
     #--------------------------------------- 
-    my $username = getpwuid( $< ); chomp $username;
-
     # the new FlexClone will be mounted at the UNIX_mount_path 
     my $UNIX_mount_path     = "$CeInit::CE_UNIX_USER_FLEXCLONE_PATH/$username";
 
@@ -361,7 +401,13 @@ sub clone_create {
 
     # NOTE: clones will be created by users, so they will be mounted to the
     # CE_JUNCT_PATH_USERS vs the CE_JUNCT_PATH_MASTER
-    my $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
+    if (defined $junction_path) {
+      $junction_path = $junction_path . "/" . $clone_name;
+      print "DEBUG: Junction_path set via the command line.\n" .
+            "       $junction_path\n";
+    } else {
+      $junction_path = "$CeInit::CE_JUNCT_PATH_USERS/$username/$clone_name";
+    }
 
     # place the FlexClone owner in the comment field so it can be tracked.
     # This can be any string of information.  One idea might be to 
@@ -383,8 +429,16 @@ sub clone_create {
           "      parent-snapshot       = $parent_snapshot\n" .
           "      junction path         = $junction_path \n" .
           "      UNIX clone path       = $UNIX_clone_path\n" .
-          "      Comment (clown owner) = $comment_field\n" .
+          "      Comment               = $comment_field\n" .
           "      space-reserve         = none\n\n";
+
+    if (defined $gid) {
+    print "INFO: Changing FlexClone user/group ownership.\n" .
+          "      username              = $username\n" .
+          "      groupname             = $groupname\n\n"; 
+    } else {
+    print "INFO: No change in FlexClone user/group ownership.\n\n";
+    }
                   
     #--------------------------------------- 
     # check that the volume already exists - if not error
@@ -436,6 +490,9 @@ sub clone_create {
 	exit 1;
     } 
 
+
+
+
     #--------------------------------------- 
     # create flexclone
     #--------------------------------------- 
@@ -445,6 +502,7 @@ sub clone_create {
 						    "junction-path",   $junction_path, 
 						    "space-reserve",   'none',
 						    "comment",         $comment_field,
+                                                    @CLONE_OPTIONS
 						    );
 
     # check status of the invoked command

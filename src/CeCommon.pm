@@ -94,7 +94,7 @@ sub init_filer {
 
     # pass username/password for vserver ontapi application access
     #     $naserver->set_admin_user("vsadmin", "devops123");
-    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER)         if (defined @CeInit::CE_ADMIN_USER);
+    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
 
     # set communication style - typically just 'LOGIN'
     $naserver->set_style($CeInit::CE_STYLE)                   if (defined $CeInit::CE_STYLE);
@@ -173,7 +173,7 @@ sub init_filer {
 
     # pass username/password for vserver ontapi application access
     #     $naserver->set_admin_user("vsadmin", "devops123");
-    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER)         if (defined @CeInit::CE_ADMIN_USER);
+    $naserver->set_admin_user(@CeInit::CE_ADMIN_USER);
 
     # set communication style - typically just 'LOGIN'
     $naserver->set_style($CeInit::CE_STYLE)                   if (defined $CeInit::CE_STYLE);

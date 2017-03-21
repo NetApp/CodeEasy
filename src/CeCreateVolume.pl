@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w 
+#!/usr/bin/perl 
 ################################################################################
 # CodeEasy Customer Toolkit Script
 #          This script was developed by NetApp to help demonstrate NetApp 
