@@ -2,6 +2,8 @@
 # CodeEasy QuickStart Guide
 ################################################################################
 
+UPDATED: Ror use with ONTAP9.0 or later.  Still backwards compatible with ONTAP prior to 9.0.
+
 ****************************************
    Introduction 
 ****************************************
@@ -38,7 +40,7 @@ A few examples:
 
 - A Silicon Valley network chip manufacturer was able to reduce their checkout and build time 
   from about 55 minutes to 5 minutes and at the save time save an average of 200GB 
-  per developer workspace. 
+  per developer workspace. Using ONTAP9.0 or later the clone time is reduced to less than 30 seconds.
  
 ****************************************
   Scope 
@@ -52,7 +54,10 @@ Support for this script is through the NetApp community forums. Questions and is
 ****************************************
 In order to be able to utilize CodeEasy Toolkit the following is required:
 
-- cDot 8.2 or later (7-mode is not supported)
+- ONTAP 8.2 or later (7-mode is not supported)
+  NOTE: ONTAP9.0 and later introduces an option to change user and group ownership of the clone.
+        This eliminates the need for a host based chown process.
+  
 - NetApp Manageability Software Development Kit (NMSDK) 5.3.x or later
 
 ****************************************
@@ -67,21 +72,21 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 	The SDK can be found on the mysupport.netapp.com 
 	Downloads -> Software -> NetApp Manageability SDK
 	Select "All Platforms" -> Go!
-	Select "NetApp Manageability SDK 5.5" -> View & Download
+	Select "NetApp Manageability SDK 5.6" -> View & Download
 
 	After clicking thru the EULA etc, you will get a file netapp-manageability-sdk-5.5.zip
 
     STEP 2: Place the CodeEasy Toolkit and the SDK next to each other.
 	%> cd <workspace>
-	%> unzip netapp-manageability-sdk-5.5.zip
+	%> unzip netapp-manageability-sdk-5.6.zip
 
-    STEP 3: Download and untar the CodeEasy Toolkit
-	%> tar -zxvf CodeEasy_1.x.x.tgz
+    STEP 3: Get CodeEasy Toolkit from GitHub
+        %> git clone https://github.com/NetApp/CodeEasy.git
 
     The final directory structure should look something like.
     <workspace>/
-    	netapp-manageability-sdk-5.5/
-	CodeEasy_1.x.x/
+    	netapp-manageability-sdk-5.6/
+	CodeEasy/
 
     The CodeEasy Perl scripts assume the SDK is at the same level as the Toolkit.
     This can be change by editing the .pl script if a different location
@@ -89,11 +94,12 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 
     NOTE: If the SDK is installed in a different location, edit the path in
     the CeCommon.pm file to use the correct path.
-    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.5/lib/perl/NetApp";
-    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.5/lib/perl/NetApp";
+    =>         use lib "$FindBin::Bin/../../netapp-manageability-sdk-5.6/lib/perl/NetApp";
+    Or Edit  # use lib "<your_full_path>/netapp-manageability-sdk-5.6/lib/perl/NetApp";
     
 
 ****************************************
+  OPTIONAL: IF using ONTAP 9.0 or later
   Setup sudo for user 'devops'
 ****************************************
     User 'devops' or similar user is the user who will own the master volume
@@ -114,6 +120,7 @@ Currently the CodeEasy Toolkit is only supported for Unix environments and NFS.
 
 
 ****************************************
+  SKIP: IF using ONTAP 9.0 or later
   Filers Export_policy - volumes need root superuser access
 ****************************************
 In order for "sudo chown" to modify the clones owner:group settings, the
@@ -263,6 +270,10 @@ command does not work, then CeChownFile.pl will not work either.
         %> sudo chmod 777 /ce_projects
 
 
+SKIP 1B: IF using ONTAP 9.0 or later, the filer can automatically chown the flexclone
+         volume to a new user/group.  ONTAP 9.0 or later is highly recommended since
+         if dramatically simplifies and speeds up the flow from minutes to seconds.
+
     Step #1B: Compile sur and fast_chown scripts
 	This step requires sudo previleges - which in this case user 'devops' has
 	sudu permissions setup to perform various operations - which needs to be
@@ -295,6 +306,10 @@ command does not work, then CeChownFile.pl will not work either.
 	bunch of files - of significant size - to the new volume.
 
 	%> cp -R netapp-manageability-sdk-5.5 /ce_projects/project_A/jenkin_build/
+
+SKIP 4: IF using ONTAP 9.0 or later, the filer can automatically chown the flexclone
+         volume to a new user/group.  ONTAP 9.0 or later is highly recommended since
+         if dramatically simplifies and speeds up the flow from minutes to seconds.
 
     Step #4: Create a file list to be later when changing ownership of the flexclone
 
@@ -329,6 +344,10 @@ command does not work, then CeChownFile.pl will not work either.
 	the same as that of the Snapshot from which it came.
 
 	If the default volume name is set in the CeInit.pm file, then the -vol <volume name> can be excluded from the command line.
+
+SKIP 2: IF using ONTAP 9.0 or later, the filer can automatically chown the flexclone
+         volume to a new user/group.  ONTAP 9.0 or later is highly recommended since
+         if dramatically simplifies and speeds up the flow from minutes to seconds.
 
     Step #2: Change ownership of the FlexClone volume to that of the current user
 

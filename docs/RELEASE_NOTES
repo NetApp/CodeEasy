@@ -1,6 +1,19 @@
 --------------------------------------------------------------------------------
 - CodeEasy Release Notes
 --------------------------------------------------------------------------------
+CodeEasy_2.0.0         (release date: 2017-03-20)
+----------------------------------------
+    - Updated instructions and code to user ONTAP 9.0 and later.  The CeCreateFlexClone.pl
+      script now allows the user to pass -username <user> -groupname <group> on the command
+      line.  This will then convert the user/groupnames to uid/gid and pass them to
+      the volume-create-clone command to chown the new flexclone to the new user/group ownership.
+    - Added -jp|-junction_path option to allow user to pass a junction_path on the command line.
+      This helps with initial setup.
+    - Removed -w from line 1 of all the CeCreate*.pl files. The warning option was generating 
+      useless warning messages from the NMSDK.
+    - Fixed code to avoid errors in new versions of Perl later than 5.16.x
+
+
 CodeEasy_1.1.5         (release date: 2016-07-24)
 ----------------------------------------
     - Merged in changed from Michael Arndt (michael.arndt@netapp.com.
